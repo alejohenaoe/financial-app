@@ -6,13 +6,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatAmount(n: number) {
-  return Math.round(n).toLocaleString("es-ES")
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
 }
 
 export function formatAmountInput(value: string) {
   const digits = value.replace(/\D/g, "")
   if (!digits) return ""
-  return Number(digits).toLocaleString("es-ES")
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
 }
 
 export function parseAmount(value: string) {
