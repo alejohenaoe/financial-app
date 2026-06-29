@@ -2,6 +2,8 @@ import { Auth } from "@supabase/auth-ui-react"
 import { ThemeSupa } from "@supabase/auth-ui-shared"
 import { supabase } from "@/lib/supabase"
 import { Wallet } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 const localization = {
   variables: {
@@ -43,6 +45,8 @@ const localization = {
 }
 
 export function AuthPage() {
+  const [authView, setAuthView] = useState<"sign_in" | "sign_up">("sign_in")
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm">
@@ -53,13 +57,40 @@ export function AuthPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Finanzas</h1>
           <p className="text-sm text-muted-foreground mt-1">Controla tus finanzas</p>
         </div>
-        <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-6">
+        <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-6 pt-5">
+          <div className="bg-muted/50 rounded-xl p-1 flex mb-5">
+            <button
+              type="button"
+              className={cn(
+                "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
+                authView === "sign_in"
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+              onClick={() => setAuthView("sign_in")}
+            >
+              Iniciar sesión
+            </button>
+            <button
+              type="button"
+              className={cn(
+                "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
+                authView === "sign_up"
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              )}
+              onClick={() => setAuthView("sign_up")}
+            >
+              Registrarse
+            </button>
+          </div>
           <Auth
             supabaseClient={supabase}
             appearance={{ theme: ThemeSupa }}
             theme="light"
             providers={[]}
             localization={localization}
+            view={authView}
           />
         </div>
       </div>

@@ -72,12 +72,12 @@ export function Home() {
     setRecent(txns)
   }
 
-  const { ref: amountRegisterRef, ...amountRest } = register("amount")
+  const { ref: amountRegisterRef } = register("amount")
+  const amountValue = watch("amount")
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
     const formatted = formatAmountInput(e.target.value)
-    e.target.value = formatted
-    amountRest.onChange(e)
+    setValue("amount", formatted, { shouldValidate: true })
   }
 
   async function onSubmit(data: FormData) {
@@ -165,9 +165,10 @@ export function Home() {
               inputMode="numeric"
               placeholder="0"
               autoFocus
-              className="flex-1 bg-transparent text-4xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground/40"
-              {...amountRest}
+              name="amount"
+              value={amountValue || ""}
               onChange={handleAmountChange}
+              className="flex-1 bg-transparent text-4xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground/40"
               ref={(e) => {
                 amountRegisterRef(e)
                 ;(amountRef as React.MutableRefObject<HTMLInputElement | null>).current = e

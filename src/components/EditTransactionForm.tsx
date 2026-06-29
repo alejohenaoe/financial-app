@@ -50,12 +50,11 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
     },
   })
 
-  const amountRegister = register("amount")
+  const amountValue = watch("amount")
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
     const formatted = formatAmountInput(e.target.value)
-    e.target.value = formatted
-    amountRegister.onChange(e)
+    setValue("amount", formatted, { shouldValidate: true })
   }
 
   const transactionType = watch("type")
@@ -109,7 +108,7 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
 
       <div className="space-y-2">
         <Label htmlFor="edit-amount" className="text-xs text-muted-foreground font-medium">Monto</Label>
-        <Input id="edit-amount" type="text" inputMode="numeric" placeholder="0" className="h-12 text-lg rounded-2xl border-border/50 px-4" {...amountRegister} onChange={handleAmountChange} />
+        <Input id="edit-amount" type="text" inputMode="numeric" placeholder="0" name="amount" value={amountValue || ""} onChange={handleAmountChange} className="h-12 text-lg rounded-2xl border-border/50 px-4" />
         {errors.amount && <p className="text-xs text-expense">{errors.amount.message}</p>}
       </div>
 
