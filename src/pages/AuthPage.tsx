@@ -1,7 +1,7 @@
 import { Auth } from "@supabase/auth-ui-react"
 import { ThemeSupa } from "@supabase/auth-ui-shared"
 import { supabase } from "@/lib/supabase"
-import { Wallet } from "lucide-react"
+import { Wallet, Lock, UserPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 
@@ -46,6 +46,7 @@ const localization = {
 
 export function AuthPage() {
   const [authView, setAuthView] = useState<"sign_in" | "sign_up">("sign_in")
+  const isSignIn = authView === "sign_in"
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6">
@@ -57,41 +58,84 @@ export function AuthPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Finanzas</h1>
           <p className="text-sm text-muted-foreground mt-1">Controla tus finanzas</p>
         </div>
-        <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-6 pt-5">
-          <div className="bg-muted/50 rounded-xl p-1 flex mb-5">
+        <div className="bg-card rounded-2xl shadow-sm border border-border/50 overflow-hidden">
+          <div className={cn("h-1", isSignIn ? "bg-primary" : "bg-income")} />
+          <div className="p-6 pt-5">
+            <div className="flex items-center gap-3 mb-1">
+              <div className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                isSignIn ? "bg-primary/10" : "bg-income/10"
+              )}>
+                {isSignIn ? (
+                  <Lock className="h-5 w-5 text-primary" />
+                ) : (
+                  <UserPlus className="h-5 w-5 text-income" />
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight">
+                  {isSignIn ? "Iniciar sesión" : "Crear cuenta"}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {isSignIn ? "Bienvenido de vuelta" : "Únete a Finanzas"}
+                </p>
+              </div>
+            </div>
+            <div className="mt-5">
+              <Auth
+                supabaseClient={supabase}
+                appearance={{
+                  theme: ThemeSupa,
+                  style: {
+                    input: {
+                      borderRadius: 12,
+                      border: "1px solid #E5E5EA",
+                      padding: "12px 16px",
+                      fontSize: 16,
+                      backgroundColor: "white",
+                      outline: "none",
+                    },
+                    button: {
+                      borderRadius: 12,
+                      fontWeight: 600,
+                      fontSize: 16,
+                      height: 48,
+                      backgroundColor: isSignIn ? "#007AFF" : "#34C759",
+                      color: "white",
+                      border: "none",
+                    },
+                    label: {
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: "#8E8E93",
+                      marginBottom: 6,
+                    },
+                    container: {
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 16,
+                    },
+                    anchor: {
+                      display: "none",
+                    },
+                  },
+                }}
+                theme="light"
+                providers={[]}
+                localization={localization}
+                view={authView}
+              />
+            </div>
             <button
               type="button"
-              className={cn(
-                "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
-                authView === "sign_in"
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground"
-              )}
-              onClick={() => setAuthView("sign_in")}
+              onClick={() => setAuthView(isSignIn ? "sign_up" : "sign_in")}
+              className="text-sm text-primary font-medium mt-5 mx-auto block"
             >
-              Iniciar sesión
-            </button>
-            <button
-              type="button"
-              className={cn(
-                "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
-                authView === "sign_up"
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground"
-              )}
-              onClick={() => setAuthView("sign_up")}
-            >
-              Registrarse
+              {isSignIn
+                ? "¿No tienes una cuenta? Registrarse"
+                : "¿Ya tienes una cuenta? Iniciar sesión"}
             </button>
           </div>
-          <Auth
-            supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa }}
-            theme="light"
-            providers={[]}
-            localization={localization}
-            view={authView}
-          />
         </div>
       </div>
     </div>

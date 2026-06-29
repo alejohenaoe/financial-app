@@ -1,16 +1,20 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom"
-import { PlusCircle, Clock, BarChart3 } from "lucide-react"
+import { PlusCircle, Clock, BarChart3, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { supabase } from "@/lib/supabase"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { useState } from "react"
 
 const tabs = [
-  { path: "/", label: "Agregar", icon: PlusCircle, activeIcon: PlusCircle },
-  { path: "/history", label: "Historial", icon: Clock, activeIcon: Clock },
-  { path: "/analytics", label: "Estadísticas", icon: BarChart3, activeIcon: BarChart3 },
+  { path: "/", label: "Agregar", icon: PlusCircle },
+  { path: "/history", label: "Historial", icon: Clock },
+  { path: "/analytics", label: "Estadísticas", icon: BarChart3 },
 ]
 
 export function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
+  const [logoutOpen, setLogoutOpen] = useState(false)
 
   return (
     <div className="flex flex-col min-h-screen max-w-lg mx-auto px-4">
@@ -27,7 +31,7 @@ export function Layout() {
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 py-1 px-6 rounded-lg transition-colors duration-150",
+                  "flex flex-col items-center gap-0.5 py-1 px-5 rounded-lg transition-colors duration-150",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -36,8 +40,46 @@ export function Layout() {
               </button>
             )
           })}
+          <button
+            onClick={() => setLogoutOpen(true)}
+            className="flex flex-col items-center gap-0.5 py-1 px-5 rounded-lg transition-colors duration-150 text-muted-foreground"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="text-[10px] font-medium tracking-wide">Salir</span>
+          </button>
         </div>
       </nav>
+
+      <Dialog open={logoutOpen} onOpenChange={(open) => { if (!open) setLogoutOpen(false) }}>
+        <DialogContent className="max-w-xs text-center">
+          <div className="flex flex-col items-center gap-3 py-2">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+              <LogOut className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-base font-semibold">Cerrar sesión</p>
+            <p className="text-sm text-muted-foreground">¿Estás seguro?</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setLogoutOpen(false)}
+              className="flex-1 h-11 rounded-xl text-sm font-medium bg-muted text-foreground hover:opacity-80 transition-opacity"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                supabase.auth.signOut()
+                setLogoutOpen(false)
+              }}
+              className="flex-1 h-11 rounded-xl text-sm font-medium bg-expense text-white hover:opacity-90 transition-opacity"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
