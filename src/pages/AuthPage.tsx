@@ -1,9 +1,9 @@
 import { Auth } from "@supabase/auth-ui-react"
 import { ThemeSupa } from "@supabase/auth-ui-shared"
 import { supabase } from "@/lib/supabase"
-import { Wallet, Lock, UserPlus } from "lucide-react"
+import { Lock, UserPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const localization = {
   variables: {
@@ -48,12 +48,19 @@ export function AuthPage() {
   const [authView, setAuthView] = useState<"sign_in" | "sign_up">("sign_in")
   const isSignIn = authView === "sign_in"
 
+  useEffect(() => {
+    // Blur any auto-focused input so the user chooses where to tap
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+  }, [authView])
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-4 shadow-sm">
-            <Wallet className="h-7 w-7 text-white" />
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-sm overflow-hidden">
+            <img src="/icono-finanza.png" alt="Finanzas" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Finanzas</h1>
           <p className="text-sm text-muted-foreground mt-1">Controla tus finanzas</p>
