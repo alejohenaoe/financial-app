@@ -36,6 +36,18 @@ React 19, TypeScript, Vite, Tailwind CSS v4, shadcn/ui, React Hook Form, Zod, Re
 - **Access token:** Stored in macOS keychain or provided by user — never hardcode in files
 - **Dashboard:** https://supabase.com/dashboard/project/isnwtmzkikirsdrqqmqw
 
+## Git & GitHub
+
+- **Remote:** `git@github.com:alejohenaoe/financial-app.git` (SSH) — SSH key not configured
+- **Push via HTTPS (when SSH fails):**
+  ```bash
+  git remote set-url origin https://alejohenaoe:TOKEN@github.com/alejohenaoe/financial-app.git
+  git push origin main
+  git remote set-url origin git@github.com:alejohenaoe/financial-app.git  # restore SSH
+  ```
+- **Token:** Provided by user when needed — never hardcode in files or commit
+- **Token URL:** https://github.com/settings/tokens (needs `repo` scope)
+
 ## Running Locally
 
 ```bash

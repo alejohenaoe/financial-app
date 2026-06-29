@@ -164,7 +164,6 @@ export function Home() {
               type="text"
               inputMode="numeric"
               placeholder="0"
-              autoFocus
               name="amount"
               value={amountValue || ""}
               onChange={handleAmountChange}

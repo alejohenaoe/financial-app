@@ -1,11 +1,11 @@
 {
-  "name": "Finance",
-  "short_name": "Finance",
-  "description": "Personal finance tracker",
+  "name": "Finanzas",
+  "short_name": "Finanzas",
+  "description": "Controla tus finanzas personales",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0f0f0f",
+  "background_color": "#F2F2F7",
+  "theme_color": "#007AFF",
   "icons": [
     {
       "src": "/icons/icon-192.png",
