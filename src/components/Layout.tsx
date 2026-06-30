@@ -17,13 +17,13 @@ export function Layout() {
   const [logoutOpen, setLogoutOpen] = useState(false)
 
   return (
-    <div className="flex flex-col min-h-screen max-w-lg mx-auto px-4">
-      <main className="flex-1 pt-2 pb-4">
+    <div className="flex flex-col min-h-screen max-w-lg mx-auto">
+      <main className="flex-1 pt-2 pb-20 px-4">
         <Outlet />
       </main>
 
-      <nav className="sticky bottom-0 bg-card/90 backdrop-blur-xl border-t border-border/50 pb-1 -mx-4 px-4">
-        <div className="flex justify-around pt-1">
+      <nav className="sticky bottom-0 bg-card/80 backdrop-blur-md border-t border-border/50 pb-[env(safe-area-inset-bottom,4px)]">
+        <div className="flex justify-around px-4 pt-1 pb-2">
           {tabs.map((tab) => {
             const isActive = tab.path === "/" ? location.pathname === "/" : location.pathname.startsWith(tab.path)
             return (
@@ -31,7 +31,7 @@ export function Layout() {
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 py-1 px-5 rounded-lg transition-colors duration-150",
+                  "flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-colors duration-150",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -42,7 +42,7 @@ export function Layout() {
           })}
           <button
             onClick={() => setLogoutOpen(true)}
-            className="flex flex-col items-center gap-0.5 py-1 px-5 rounded-lg transition-colors duration-150 text-muted-foreground"
+            className="flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-colors duration-150 text-muted-foreground"
           >
             <LogOut className="h-5 w-5" />
             <span className="text-[10px] font-medium tracking-wide">Salir</span>

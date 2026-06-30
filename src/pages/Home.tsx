@@ -177,9 +177,9 @@ export function Home() {
           {errors.amount && <p className="text-xs text-expense mt-2">{errors.amount.message}</p>}
         </div>
 
-        <div className="flex gap-3">
+        <div className="grid grid-cols-[1fr_160px] gap-3">
           {transactionType === "expense" ? (
-            <div className="flex-1">
+            <div className="min-w-0">
               <Select
                 onValueChange={(v) => setValue("category", v)}
                 defaultValue=""
@@ -197,7 +197,7 @@ export function Home() {
               {errors.category && <p className="text-xs text-expense mt-1 ml-1">{errors.category.message}</p>}
             </div>
           ) : (
-            <div className="flex-1">
+            <div className="min-w-0">
               <Input
                 placeholder="Nota"
                 className="h-12 bg-card rounded-2xl shadow-sm border-border/50 text-base px-5"
@@ -205,7 +205,7 @@ export function Home() {
               />
             </div>
           )}
-          <div className="w-44">
+          <div>
             <Input
               id="date"
               type="date"
