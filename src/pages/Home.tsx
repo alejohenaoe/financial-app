@@ -206,12 +206,19 @@ export function Home() {
             </div>
           )}
           <div>
-            <Input
-              id="date"
-              type="date"
-              className="h-12 bg-card rounded-2xl shadow-sm border-border/50 text-base w-full px-4"
-              {...register("transaction_date")}
-            />
+            <div className="relative h-12">
+              <input
+                type="date"
+                value={watch("transaction_date")}
+                onChange={(e) => setValue("transaction_date", e.target.value, { shouldValidate: true })}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                style={{ zIndex: 1 }}
+              />
+              <div className="h-full w-full bg-card rounded-2xl shadow-sm border border-border/50 px-4 flex items-center text-base pointer-events-none text-muted-foreground">
+                {watch("transaction_date") ? watch("transaction_date").split("-").reverse().join("/") : "Fecha"}
+              </div>
+            </div>
+            {errors.transaction_date && <p className="text-xs text-expense mt-1">{errors.transaction_date.message}</p>}
           </div>
         </div>
 
