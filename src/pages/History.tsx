@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { getTransactions, deleteTransaction } from "@/services/transaction"
-import type { Transaction } from "@/types"
+import { CATEGORIES, type Transaction } from "@/types"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { ArrowDownRight, ArrowUpRight, Search, Trash2, Pencil, TriangleAlert } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EditTransactionForm } from "@/components/EditTransactionForm"
@@ -16,6 +17,7 @@ export function History() {
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
+  const [categoryFilter, setCategoryFilter] = useState("all")
   const [editTxn, setEditTxn] = useState<Transaction | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteConfirmTxn, setDeleteConfirmTxn] = useState<Transaction | null>(null)
@@ -36,6 +38,7 @@ export function History() {
         pageParam: currentPage,
         search,
         type: typeFilter,
+        category: categoryFilter,
       })
       if (currentPage === 0) {
         setTransactions(result.data)
@@ -50,7 +53,7 @@ export function History() {
       loadingRef.current = false
       setLoading(false)
     }
-  }, [search, typeFilter])
+  }, [search, typeFilter, categoryFilter])
 
   useEffect(() => {
     pageRef.current = 0
@@ -59,6 +62,10 @@ export function History() {
     setTransactions([])
     loadMore()
   }, [loadMore])
+
+  useEffect(() => {
+    if (typeFilter === "income") setCategoryFilter("all")
+  }, [typeFilter])
 
   const sentinelRef = useInfiniteScroll(loadMore, hasMoreRef.current && !loading)
 
@@ -105,6 +112,20 @@ export function History() {
             {filterLabels[type]}
           </button>
         ))}
+      </div>
+
+      <div className="bg-card rounded-2xl shadow-sm border border-border/50 px-4 py-3">
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-full bg-transparent border-none shadow-none text-sm p-0 h-auto">
+            <SelectValue placeholder="Todas las categorías" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas las categorías</SelectItem>
+            {CATEGORIES.map((cat) => (
+              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {transactions.length === 0 && !loading ? (

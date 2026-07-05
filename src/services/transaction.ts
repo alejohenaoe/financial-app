@@ -5,12 +5,14 @@ export async function getTransactions({
   pageParam = 0,
   search,
   type,
+  category,
   dateFrom,
   dateTo,
 }: {
   pageParam?: number
   search?: string
   type?: string
+  category?: string
   dateFrom?: string
   dateTo?: string
 }): Promise<{ data: Transaction[]; nextPage: number | null }> {
@@ -31,6 +33,10 @@ export async function getTransactions({
 
   if (type && type !== "all") {
     query = query.eq("type", type)
+  }
+
+  if (category && category !== "all") {
+    query = query.eq("category", category)
   }
 
   if (dateFrom) {
