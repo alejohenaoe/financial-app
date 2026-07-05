@@ -10,6 +10,8 @@ export const CATEGORIES = [
   "Hogar",
   "Trabajo",
   "Gasolina",
+  "Crédito",
+  "Parqueadero",
   "Otro",
 ] as const
 
