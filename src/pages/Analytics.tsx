@@ -3,6 +3,7 @@ import { getExpensesByCategory } from "@/services/transaction"
 import { useEffect } from "react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, format, subMonths } from "date-fns"
+import { Toast } from "@/components/Toast"
 import { cn, formatAmount } from "@/lib/utils"
 
 type Period = "current-month" | "prev-month" | "current-year"
@@ -29,15 +30,20 @@ const CHART_COLORS = [
 export function Analytics() {
   const [period, setPeriod] = useState<Period>("current-month")
   const [data, setData] = useState<{ category: string; total: number; percentage: number }[]>([])
+  const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
   }, [period])
 
   async function loadData() {
-    const range = getDateRange(period)
-    const result = await getExpensesByCategory(range.from, range.to)
-    setData(result)
+    try {
+      const range = getDateRange(period)
+      const result = await getExpensesByCategory(range.from, range.to)
+      setData(result)
+    } catch {
+      setToast("Error al cargar estadísticas")
+    }
   }
 
   const totalExpenses = data.reduce((sum, d) => sum + d.total, 0)
@@ -122,6 +128,7 @@ export function Analytics() {
           </div>
         </>
       )}
+      <Toast message={toast} type="error" onClose={() => setToast(null)} />
     </div>
   )
 }

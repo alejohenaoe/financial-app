@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EditTransactionForm } from "@/components/EditTransactionForm"
+import { Toast } from "@/components/Toast"
 import { cn, formatAmount } from "@/lib/utils"
 
 export function History() {
@@ -20,6 +21,10 @@ export function History() {
   const [editTxn, setEditTxn] = useState<Transaction | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteConfirmTxn, setDeleteConfirmTxn] = useState<Transaction | null>(null)
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+  const [toast, setToast] = useState<string | null>(null)
+  const [toastType, setToastType] = useState<"error" | "success">("error")
 
   const filterLabels: Record<string, string> = { all: "Todos", income: "Ingreso", expense: "Gasto" }
 
@@ -38,6 +43,8 @@ export function History() {
         search,
         type: typeFilter,
         category: categoryFilter,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
       })
       if (currentPage === 0) {
         setTransactions(result.data)
@@ -47,12 +54,13 @@ export function History() {
       hasMoreRef.current = result.nextPage !== null
       pageRef.current = currentPage + 1
     } catch {
-      // silent
+      setToast("Error al cargar movimientos")
+      setToastType("error")
     } finally {
       loadingRef.current = false
       setLoading(false)
     }
-  }, [search, typeFilter, categoryFilter])
+  }, [search, typeFilter, categoryFilter, dateFrom, dateTo])
 
   useEffect(() => {
     pageRef.current = 0
@@ -69,8 +77,13 @@ export function History() {
   const sentinelRef = useInfiniteScroll(loadMore, hasMoreRef.current && !loading)
 
   async function handleDelete(id: string) {
-    await deleteTransaction(id)
-    setTransactions((prev) => prev.filter((t) => t.id !== id))
+    try {
+      await deleteTransaction(id)
+      setTransactions((prev) => prev.filter((t) => t.id !== id))
+    } catch {
+      setToast("Error al eliminar el movimiento")
+      setToastType("error")
+    }
   }
 
   function handleEdit(txn: Transaction) {
@@ -128,6 +141,33 @@ export function History() {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="flex gap-2">
+        <div className="relative flex-1 h-12">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            style={{ zIndex: 1 }}
+          />
+          <div className="h-full w-full bg-card rounded-2xl shadow-sm border border-border/50 px-4 flex items-center text-sm pointer-events-none text-muted-foreground">
+            {dateFrom ? dateFrom.split("-").reverse().join("/") : "Desde"}
+          </div>
+        </div>
+        <div className="relative flex-1 h-12">
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            style={{ zIndex: 1 }}
+          />
+          <div className="h-full w-full bg-card rounded-2xl shadow-sm border border-border/50 px-4 flex items-center text-sm pointer-events-none text-muted-foreground">
+            {dateTo ? dateTo.split("-").reverse().join("/") : "Hasta"}
+          </div>
+        </div>
       </div>
 
       {transactions.length === 0 && !loading ? (
@@ -239,6 +279,7 @@ export function History() {
           </div>
         </DialogContent>
       </Dialog>
+      <Toast message={toast} type={toastType} onClose={() => setToast(null)} />
     </div>
   )
 }

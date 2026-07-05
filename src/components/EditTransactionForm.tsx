@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
+import { Toast } from "@/components/Toast"
 import { cn, formatAmountInput, parseAmount } from "@/lib/utils"
 
 const schema = z.object({
@@ -32,6 +33,7 @@ interface EditTransactionFormProps {
 
 export function EditTransactionForm({ transaction, onSuccess }: EditTransactionFormProps) {
   const [loading, setLoading] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
 
   const {
     register,
@@ -71,7 +73,7 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
       })
       onSuccess()
     } catch {
-      // silent
+      setToast("Error al guardar los cambios")
     } finally {
       setLoading(false)
     }
@@ -154,6 +156,7 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
       >
         {loading ? "Guardando..." : "Guardar Cambios"}
       </button>
+      <Toast message={toast} type="error" onClose={() => setToast(null)} />
     </form>
   )
 }

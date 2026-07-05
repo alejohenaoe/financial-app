@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from "react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { ArrowDownRight, ArrowUpRight, Check, Eye, EyeOff } from "lucide-react"
+import { Toast } from "@/components/Toast"
 import { cn, formatAmount, formatAmountInput, parseAmount } from "@/lib/utils"
 
 const schema = z.object({
@@ -39,6 +40,9 @@ export function Home() {
   const [balance, setBalance] = useState({ income: 0, expense: 0, balance: 0 })
   const [recent, setRecent] = useState<Transaction[]>([])
   const [balanceVisible, setBalanceVisible] = useState(false)
+  const [loadingSummary, setLoadingSummary] = useState(true)
+  const [toast, setToast] = useState<string | null>(null)
+  const [toastType, setToastType] = useState<"error" | "success">("error")
   const amountRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -73,9 +77,17 @@ export function Home() {
   }, [])
 
   async function loadSummary() {
-    const [bal, txns] = await Promise.all([getBalance(), getRecentTransactions()])
-    setBalance(bal)
-    setRecent(txns)
+    setLoadingSummary(true)
+    try {
+      const [bal, txns] = await Promise.all([getBalance(), getRecentTransactions()])
+      setBalance(bal)
+      setRecent(txns)
+    } catch {
+      setToast("Error al cargar el resumen")
+      setToastType("error")
+    } finally {
+      setLoadingSummary(false)
+    }
   }
 
   const { ref: amountRegisterRef } = register("amount")
@@ -108,7 +120,8 @@ export function Home() {
       window.dispatchEvent(new CustomEvent("transaction-saved"))
       loadSummary()
     } catch {
-      // silent
+      setToast("Error al guardar la transacción")
+      setToastType("error")
     } finally {
       setLoading(false)
     }
@@ -116,6 +129,16 @@ export function Home() {
 
   return (
     <div className="space-y-5">
+      {loadingSummary ? (
+        <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-5 text-center">
+          <div className="h-3 w-16 bg-muted rounded mx-auto animate-pulse" />
+          <div className="h-10 w-48 bg-muted rounded mx-auto mt-3 animate-pulse" />
+          <div className="flex justify-center gap-5 mt-3">
+            <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+          </div>
+        </div>
+      ) : (
       <div
         className="bg-card rounded-2xl shadow-sm border border-border/50 p-5 text-center cursor-pointer active:opacity-80"
         onClick={() => setBalanceVisible(v => !v)}
@@ -140,6 +163,7 @@ export function Home() {
           </div>
         </div>
       </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="bg-muted/50 rounded-xl p-1 flex">
@@ -252,7 +276,22 @@ export function Home() {
 
       <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-5">
         <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mb-3">Recientes</p>
-        {recent.length === 0 ? (
+        {loadingSummary ? (
+          <div className="space-y-0">
+            {[1,2,3].map((i) => (
+              <div key={i} className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-muted animate-pulse shrink-0" />
+                  <div className="space-y-1.5">
+                    <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                    <div className="h-3 w-20 bg-muted rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : recent.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-3">Sin movimientos</p>
         ) : (
           <div className="space-y-0">
@@ -282,6 +321,7 @@ export function Home() {
           </div>
         )}
       </div>
+      <Toast message={toast} type={toastType} onClose={() => setToast(null)} />
     </div>
   )
 }
