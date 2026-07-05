@@ -50,6 +50,7 @@ export function Home() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    shouldFocusError: false,
     defaultValues: {
       type: "expense",
       amount: "",
