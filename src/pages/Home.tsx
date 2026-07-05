@@ -3,15 +3,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { createTransaction, getBalance, getRecentTransactions } from "@/services/transaction"
 import { CATEGORIES, type Transaction } from "@/types"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect, useRef } from "react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { ArrowDownRight, ArrowUpRight, Check, Eye, EyeOff } from "lucide-react"
-import { formatAmount, formatAmountInput, parseAmount } from "@/lib/utils"
+import { cn, formatAmount, formatAmountInput, parseAmount } from "@/lib/utils"
 
 const schema = z.object({
   type: z.enum(["income", "expense"]),
@@ -122,10 +120,10 @@ export function Home() {
         onClick={() => setBalanceVisible(v => !v)}
       >
         <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase">Saldo</p>
-        <p className={`mt-1 flex items-center justify-center ${balance.balance < 0 && balanceVisible ? "text-expense" : ""}`}>
+        <p className={cn("mt-1 flex items-center justify-center", balance.balance < 0 && balanceVisible && "text-expense")}>
           {balance.balance < 0 && balanceVisible && <span className="text-5xl font-light tracking-tight text-expense mr-0.5">−</span>}
           <span className="text-2xl font-light text-muted-foreground align-top mr-1">$</span>
-          <span className={`font-light tracking-tight ${balanceVisible ? "text-5xl" : "text-2xl"}`}>{balanceVisible ? formatAmount(Math.abs(balance.balance)) : '******'}</span>
+          <span className={cn("font-light tracking-tight", balanceVisible ? "text-5xl" : "text-2xl")}>{balanceVisible ? formatAmount(Math.abs(balance.balance)) : '******'}</span>
           <span className="ml-3 text-muted-foreground/60">
             {balanceVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </span>
@@ -146,22 +144,14 @@ export function Home() {
         <div className="bg-muted/50 rounded-xl p-1 flex">
           <button
             type="button"
-            className={`flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150 ${
-              transactionType === "expense"
-                ? "bg-expense text-white shadow-sm"
-                : "text-muted-foreground"
-            }`}
+            className={cn("flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150", transactionType === "expense" ? "bg-expense text-white shadow-sm" : "text-muted-foreground")}
             onClick={() => setValue("type", "expense")}
           >
             Gasto
           </button>
           <button
             type="button"
-            className={`flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150 ${
-              transactionType === "income"
-                ? "bg-income text-white shadow-sm"
-                : "text-muted-foreground"
-            }`}
+            className={cn("flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150", transactionType === "income" ? "bg-income text-white shadow-sm" : "text-muted-foreground")}
             onClick={() => setValue("type", "income")}
           >
             Ingreso
@@ -245,13 +235,7 @@ export function Home() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full h-13 rounded-2xl text-base font-semibold transition-all duration-150 active:scale-[0.97] ${
-            success
-              ? "bg-income text-white scale-[0.97]"
-              : transactionType === "expense"
-                ? "bg-expense text-white hover:opacity-90"
-                : "bg-income text-white hover:opacity-90"
-          }`}
+          className={cn("w-full h-14 rounded-2xl text-base font-semibold transition-all duration-150 active:scale-[0.97]", success ? "bg-income text-white scale-[0.97]" : transactionType === "expense" ? "bg-expense text-white hover:opacity-90" : "bg-income text-white hover:opacity-90")}
         >
           {success ? (
             <span className="flex items-center justify-center gap-2">
@@ -274,14 +258,10 @@ export function Home() {
             {recent.map((t, i) => (
               <div
                 key={t.id}
-                className={`flex items-center justify-between py-3 ${
-                  i < recent.length - 1 ? "border-b border-border/50" : ""
-                }`}
+                className={cn("flex items-center justify-between py-3", i < recent.length - 1 && "border-b border-border/50")}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${
-                    t.type === "income" ? "bg-income/10" : "bg-expense/10"
-                  }`}>
+                  <div className={cn("shrink-0 w-9 h-9 rounded-full flex items-center justify-center", t.type === "income" ? "bg-income/10" : "bg-expense/10")}>
                     {t.type === "income" ? (
                       <ArrowUpRight className="h-4 w-4 text-income" />
                     ) : (
@@ -293,9 +273,7 @@ export function Home() {
                     <p className="text-xs text-muted-foreground">{format(new Date(t.transaction_date), "d MMM", { locale: es })}</p>
                   </div>
                 </div>
-                <p className={`shrink-0 text-sm font-semibold ${
-                  t.type === "income" ? "text-income" : "text-expense"
-                }`}>
+                <p className={cn("shrink-0 text-sm font-semibold", t.type === "income" ? "text-income" : "text-expense")}>
                   {t.type === "income" ? "+" : "-"}${formatAmount(Number(t.amount))}
                 </p>
               </div>
