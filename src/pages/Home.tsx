@@ -106,7 +106,6 @@ export function Home() {
       })
       setSuccess(true)
       setTimeout(() => setSuccess(false), 1500)
-      amountRef.current?.focus()
       window.dispatchEvent(new CustomEvent("transaction-saved"))
       loadSummary()
     } catch {
