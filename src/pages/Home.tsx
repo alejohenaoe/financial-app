@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect, useRef } from "react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { ArrowDownRight, ArrowUpRight, Check } from "lucide-react"
+import { ArrowDownRight, ArrowUpRight, Check, Eye, EyeOff } from "lucide-react"
 import { formatAmount, formatAmountInput, parseAmount } from "@/lib/utils"
 
 const schema = z.object({
@@ -125,16 +125,19 @@ export function Home() {
         <p className={`mt-1 flex items-center justify-center ${balance.balance < 0 && balanceVisible ? "text-expense" : ""}`}>
           {balance.balance < 0 && balanceVisible && <span className="text-5xl font-light tracking-tight text-expense mr-0.5">−</span>}
           <span className="text-2xl font-light text-muted-foreground align-top mr-1">$</span>
-          <span className="text-5xl font-light tracking-tight">{balanceVisible ? formatAmount(Math.abs(balance.balance)) : '••••••'}</span>
+          <span className="text-5xl font-light tracking-tight">{balanceVisible ? formatAmount(Math.abs(balance.balance)) : '******'}</span>
+          <span className="ml-3 text-muted-foreground/60">
+            {balanceVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </span>
         </p>
         <div className="flex justify-center gap-5 mt-3">
           <div className="flex items-center gap-1.5 text-sm">
             <div className="w-2 h-2 rounded-full bg-income" />
-            <span className="text-muted-foreground">{balanceVisible ? `$${formatAmount(balance.income)}` : '••••'}</span>
+            <span className="text-muted-foreground">{balanceVisible ? `$${formatAmount(balance.income)}` : '****'}</span>
           </div>
           <div className="flex items-center gap-1.5 text-sm">
             <div className="w-2 h-2 rounded-full bg-expense" />
-            <span className="text-muted-foreground">{balanceVisible ? `$${formatAmount(balance.expense)}` : '••••'}</span>
+            <span className="text-muted-foreground">{balanceVisible ? `$${formatAmount(balance.expense)}` : '****'}</span>
           </div>
         </div>
       </div>

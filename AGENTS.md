@@ -38,6 +38,8 @@ React 19, TypeScript, Vite, Tailwind CSS v4, shadcn/ui, React Hook Form, Zod, Re
 
 ## Git & GitHub
 
+- **Nunca ejecutar comandos git sin que el usuario lo pida explícitamente.**
+- **Los mensajes de commit deben ser descriptivos** — explicar qué y por qué cambia, no solo "fix bug" o "update".
 - **Remote:** `git@github.com:alejohenaoe/financial-app.git` (SSH) — SSH key not configured
 - **Push via HTTPS (when SSH fails):**
   ```bash
