@@ -27,7 +27,7 @@ type FormData = z.infer<typeof schema>
 
 interface EditTransactionFormProps {
   transaction: Transaction
-  onSuccess: (updated: Transaction) => void
+  onSuccess: () => void
 }
 
 export function EditTransactionForm({ transaction, onSuccess }: EditTransactionFormProps) {
@@ -62,14 +62,14 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
   async function onSubmit(data: FormData) {
     setLoading(true)
     try {
-      const updated = await updateTransaction(transaction.id, {
+      await updateTransaction(transaction.id, {
         type: data.type,
         amount: parseAmount(data.amount),
         category: data.type === "expense" ? (data.category as typeof CATEGORIES[number]) : null,
         description: data.description || null,
         transaction_date: data.transaction_date,
       })
-      onSuccess(updated)
+      onSuccess()
     } catch {
       // silent
     } finally {
@@ -119,7 +119,7 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
             onValueChange={(v) => setValue("category", v)}
             defaultValue={transaction.category || ""}
           >
-            <SelectTrigger className="h-12 rounded-2xl border-border/50 text-base px-4">
+            <SelectTrigger className="h-12 rounded-2xl border-border/50 text-base px-4 focus:ring-0">
               <SelectValue placeholder="Seleccionar categoría" />
             </SelectTrigger>
             <SelectContent>

@@ -79,10 +79,13 @@ export function History() {
     setEditOpen(true)
   }
 
-  function handleEditSuccess(updated: Transaction) {
-    setTransactions((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+  function handleEditSuccess() {
     setEditOpen(false)
     setEditTxn(null)
+    pageRef.current = 0
+    hasMoreRef.current = true
+    loadingRef.current = false
+    loadMore()
   }
 
   return (
@@ -116,7 +119,7 @@ export function History() {
 
       <div className="bg-card rounded-2xl shadow-sm border border-border/50 px-4 py-3">
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full bg-transparent border-none shadow-none text-sm p-0 h-auto">
+          <SelectTrigger className="w-full bg-transparent border-none shadow-none text-sm p-0 h-auto focus:ring-0">
             <SelectValue placeholder="Todas las categorías" />
           </SelectTrigger>
           <SelectContent>

@@ -35,6 +35,7 @@ React 19, TypeScript, Vite, Tailwind CSS v4, shadcn/ui, React Hook Form, Zod, Re
 - **Apply migrations:** `supabase db push` (requires SUPABASE_ACCESS_TOKEN)
 - **Access token:** Stored in macOS keychain or provided by user — never hardcode in files
 - **Dashboard:** https://supabase.com/dashboard/project/isnwtmzkikirsdrqqmqw
+- **Token usage:** Stored in `.env` as `SUPABASE_ACCESS_TOKEN`. Load with `. env` before running `supabase db push` to apply migrations.
 
 ## Git & GitHub
 

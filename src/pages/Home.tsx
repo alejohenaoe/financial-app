@@ -196,7 +196,7 @@ export function Home() {
                 onValueChange={(v) => setValue("category", v)}
                 defaultValue=""
               >
-                <SelectTrigger className="h-12 bg-card rounded-2xl shadow-sm border-border/50 text-base px-5">
+                <SelectTrigger className="h-12 bg-card rounded-2xl shadow-sm border-border/50 text-base px-5 focus:ring-0">
                   <SelectValue placeholder="Categoría" />
                 </SelectTrigger>
                 <SelectContent>
