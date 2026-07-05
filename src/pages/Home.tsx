@@ -40,6 +40,7 @@ export function Home() {
   const [success, setSuccess] = useState(false)
   const [balance, setBalance] = useState({ income: 0, expense: 0, balance: 0 })
   const [recent, setRecent] = useState<Transaction[]>([])
+  const [balanceVisible, setBalanceVisible] = useState(false)
   const amountRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -64,6 +65,12 @@ export function Home() {
 
   useEffect(() => {
     loadSummary()
+  }, [])
+
+  useEffect(() => {
+    const handler = () => { if (document.hidden) setBalanceVisible(false) }
+    document.addEventListener("visibilitychange", handler)
+    return () => document.removeEventListener("visibilitychange", handler)
   }, [])
 
   async function loadSummary() {
@@ -111,21 +118,24 @@ export function Home() {
 
   return (
     <div className="space-y-5">
-      <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-5 text-center">
+      <div
+        className="bg-card rounded-2xl shadow-sm border border-border/50 p-5 text-center cursor-pointer active:opacity-80"
+        onClick={() => setBalanceVisible(v => !v)}
+      >
         <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase">Saldo</p>
-        <p className={`mt-1 flex items-center justify-center ${balance.balance < 0 ? "text-expense" : ""}`}>
-          {balance.balance < 0 && <span className="text-5xl font-light tracking-tight text-expense mr-0.5">−</span>}
+        <p className={`mt-1 flex items-center justify-center ${balance.balance < 0 && balanceVisible ? "text-expense" : ""}`}>
+          {balance.balance < 0 && balanceVisible && <span className="text-5xl font-light tracking-tight text-expense mr-0.5">−</span>}
           <span className="text-2xl font-light text-muted-foreground align-top mr-1">$</span>
-          <span className="text-5xl font-light tracking-tight">{formatAmount(Math.abs(balance.balance))}</span>
+          <span className="text-5xl font-light tracking-tight">{balanceVisible ? formatAmount(Math.abs(balance.balance)) : '••••••'}</span>
         </p>
         <div className="flex justify-center gap-5 mt-3">
           <div className="flex items-center gap-1.5 text-sm">
             <div className="w-2 h-2 rounded-full bg-income" />
-            <span className="text-muted-foreground">${formatAmount(balance.income)}</span>
+            <span className="text-muted-foreground">{balanceVisible ? `$${formatAmount(balance.income)}` : '••••'}</span>
           </div>
           <div className="flex items-center gap-1.5 text-sm">
             <div className="w-2 h-2 rounded-full bg-expense" />
-            <span className="text-muted-foreground">${formatAmount(balance.expense)}</span>
+            <span className="text-muted-foreground">{balanceVisible ? `$${formatAmount(balance.expense)}` : '••••'}</span>
           </div>
         </div>
       </div>

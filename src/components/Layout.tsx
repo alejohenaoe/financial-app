@@ -17,8 +17,8 @@ export function Layout() {
   const [logoutOpen, setLogoutOpen] = useState(false)
 
   return (
-    <div className="flex flex-col min-h-screen max-w-lg mx-auto">
-      <main className="flex-1 pt-2 pb-20 px-4">
+      <div className="flex flex-col h-dvh max-w-lg mx-auto overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 pt-2 pb-4 px-4">
         <Outlet />
       </main>
 
