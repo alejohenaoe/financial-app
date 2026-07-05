@@ -125,7 +125,7 @@ export function Home() {
         <p className={`mt-1 flex items-center justify-center ${balance.balance < 0 && balanceVisible ? "text-expense" : ""}`}>
           {balance.balance < 0 && balanceVisible && <span className="text-5xl font-light tracking-tight text-expense mr-0.5">−</span>}
           <span className="text-2xl font-light text-muted-foreground align-top mr-1">$</span>
-          <span className="text-5xl font-light tracking-tight">{balanceVisible ? formatAmount(Math.abs(balance.balance)) : '******'}</span>
+          <span className={`font-light tracking-tight ${balanceVisible ? "text-5xl" : "text-2xl"}`}>{balanceVisible ? formatAmount(Math.abs(balance.balance)) : '******'}</span>
           <span className="ml-3 text-muted-foreground/60">
             {balanceVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </span>
