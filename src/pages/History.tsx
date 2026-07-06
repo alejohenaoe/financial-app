@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EditTransactionForm } from "@/components/EditTransactionForm"
+import { DatePicker } from "@/components/DatePicker"
 import { Toast } from "@/components/Toast"
 import { cn, formatAmount } from "@/lib/utils"
 
@@ -71,7 +72,11 @@ export function History() {
   }, [loadMore])
 
   useEffect(() => {
-    if (typeFilter === "income") setCategoryFilter("all")
+    if (typeFilter === "income") {
+      setCategoryFilter("all")
+      setDateFrom("")
+      setDateTo("")
+    }
   }, [typeFilter])
 
   const sentinelRef = useInfiniteScroll(loadMore, hasMoreRef.current && !loading)
@@ -129,46 +134,28 @@ export function History() {
         ))}
       </div>
 
-      <div className="bg-card rounded-2xl shadow-sm border border-border/50 px-4 py-3">
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full bg-transparent border-none shadow-none text-sm p-0 h-auto focus:ring-0">
-            <SelectValue placeholder="Todas las categorías" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las categorías</SelectItem>
-            {CATEGORIES.map((cat) => (
-              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {typeFilter !== "income" && (
+        <div className="bg-card rounded-2xl shadow-sm border border-border/50 px-4 py-3">
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-full bg-transparent border-none shadow-none text-sm p-0 h-auto focus:ring-0">
+              <SelectValue placeholder="Todas las categorías" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
-      <div className="flex gap-2">
-        <div className="relative flex-1 h-12">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            style={{ zIndex: 1 }}
-          />
-          <div className="h-full w-full bg-card rounded-2xl shadow-sm border border-border/50 px-4 flex items-center text-sm pointer-events-none text-muted-foreground">
-            {dateFrom ? dateFrom.split("-").reverse().join("/") : "Desde"}
-          </div>
+      {typeFilter !== "income" && (
+        <div className="flex gap-2">
+          <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="Desde" />
+          <DatePicker value={dateTo} onChange={setDateTo} placeholder="Hasta" />
         </div>
-        <div className="relative flex-1 h-12">
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            style={{ zIndex: 1 }}
-          />
-          <div className="h-full w-full bg-card rounded-2xl shadow-sm border border-border/50 px-4 flex items-center text-sm pointer-events-none text-muted-foreground">
-            {dateTo ? dateTo.split("-").reverse().join("/") : "Hasta"}
-          </div>
-        </div>
-      </div>
+      )}
 
       {transactions.length === 0 && !loading ? (
         <p className="text-sm text-muted-foreground text-center py-8">Sin movimientos</p>
