@@ -69,12 +69,15 @@ export async function getRecentTransactions(limit = 5): Promise<Transaction[]> {
 }
 
 export async function getBalance(): Promise<{ income: number; expense: number; balance: number }> {
-  const { data, error } = await supabase.from("transactions").select("type, amount")
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("type, sum:amount.sum()")
 
   if (error) throw error
 
-  const income = data.filter((t) => t.type === "income").reduce((sum, t) => sum + Number(t.amount), 0)
-  const expense = data.filter((t) => t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0)
+  const rows = (data ?? []) as { type: string; sum: number | null }[]
+  const income = rows.find((r) => r.type === "income")?.sum ?? 0
+  const expense = rows.find((r) => r.type === "expense")?.sum ?? 0
 
   return { income, expense, balance: income - expense }
 }
