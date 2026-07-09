@@ -60,7 +60,7 @@ export function AuthPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-sm overflow-hidden">
-            <img src="/icono-finanza.png" alt="Finanzas" className="w-full h-full object-cover" />
+            <img src="/icono-definitivo.png" alt="Finanzas" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Finanzas</h1>
           <p className="text-sm text-muted-foreground mt-1">Controla tus finanzas</p>
