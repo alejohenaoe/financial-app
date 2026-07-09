@@ -3,14 +3,14 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { createTransaction, getBalance, getRecentTransactions } from "@/services/transaction"
 import { CATEGORIES, type Transaction } from "@/types"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { ArrowDownRight, ArrowUpRight, Check, Eye, EyeOff } from "lucide-react"
+import { Check, ChevronRight, Loader2, Settings, ArrowRight, Tag } from "lucide-react"
 import { Toast } from "@/components/Toast"
-import { cn, formatAmount, formatAmountInput, parseAmount } from "@/lib/utils"
+import { cn, formatAmount } from "@/lib/utils"
+import { useNavigate } from "react-router-dom"
+import { getCategoryIcon, getCategoryColor } from "@/lib/categories"
 
 const schema = z.object({
   type: z.enum(["income", "expense"]),
@@ -35,14 +35,15 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export function Home() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [balance, setBalance] = useState({ income: 0, expense: 0, balance: 0 })
-  const [recent, setRecent] = useState<Transaction[]>([])
-  const [balanceVisible, setBalanceVisible] = useState(false)
+  const [recentTxs, setRecentTxs] = useState<Transaction[]>([])
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [toast, setToast] = useState<string | null>(null)
   const [toastType, setToastType] = useState<"error" | "success">("error")
+  const [balanceVisible, setBalanceVisible] = useState(false)
   const amountRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -71,17 +72,21 @@ export function Home() {
   }, [])
 
   useEffect(() => {
-    const handler = () => { if (document.hidden) setBalanceVisible(false) }
-    document.addEventListener("visibilitychange", handler)
-    return () => document.removeEventListener("visibilitychange", handler)
+    function handleVisibilityChange() {
+      if (document.hidden) setBalanceVisible(false)
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange)
   }, [])
+
+  const recent = useMemo(() => recentTxs.slice(0, 3), [recentTxs])
 
   async function loadSummary() {
     setLoadingSummary(true)
     try {
       const [bal, txns] = await Promise.all([getBalance(), getRecentTransactions()])
       setBalance(bal)
-      setRecent(txns)
+      setRecentTxs(txns)
     } catch {
       setToast("Error al cargar el resumen")
       setToastType("error")
@@ -94,16 +99,20 @@ export function Home() {
   const amountValue = watch("amount")
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const formatted = formatAmountInput(e.target.value)
-    setValue("amount", formatted, { shouldValidate: true })
+    const digits = e.target.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1")
+    setValue("amount", digits, { shouldValidate: true })
   }
+
+  const parsedAmount = parseFloat(amountValue || "0")
+  const canSave = parsedAmount > 0 && !loading
 
   async function onSubmit(data: FormData) {
     setLoading(true)
     try {
+      const amountNum = parseFloat(data.amount.replace(/\./g, "").replace(/,/g, ""))
       await createTransaction({
         type: data.type,
-        amount: parseAmount(data.amount),
+        amount: amountNum,
         category: data.type === "expense" ? (data.category as typeof CATEGORIES[number]) : null,
         description: data.description || null,
         transaction_date: data.transaction_date,
@@ -128,198 +137,251 @@ export function Home() {
   }
 
   return (
-    <div className="space-y-5">
-      {loadingSummary ? (
-        <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-5 text-center">
-          <div className="h-3 w-16 bg-muted rounded mx-auto animate-pulse" />
-          <div className="h-10 w-48 bg-muted rounded mx-auto mt-3 animate-pulse" />
-          <div className="flex justify-center gap-5 mt-3">
-            <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-            <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-          </div>
-        </div>
-      ) : (
-      <div
-        className="bg-card rounded-2xl shadow-sm border border-border/50 p-5 text-center cursor-pointer active:opacity-80"
-        onClick={() => setBalanceVisible(v => !v)}
-      >
-        <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase">Saldo</p>
-        <p className={cn("mt-1 flex items-center justify-center", balance.balance < 0 && balanceVisible && "text-expense")}>
-          {balance.balance < 0 && balanceVisible && <span className="text-5xl font-light tracking-tight text-expense mr-0.5">−</span>}
-          <span className="text-2xl font-light text-muted-foreground align-top mr-1">$</span>
-          <span className={cn("font-light tracking-tight", balanceVisible ? "text-5xl" : "text-2xl")}>{balanceVisible ? formatAmount(Math.abs(balance.balance)) : '******'}</span>
-          <span className="ml-3 text-muted-foreground/60">
-            {balanceVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-          </span>
-        </p>
-        <div className="flex justify-center gap-5 mt-3">
-          <div className="flex items-center gap-1.5 text-sm">
-            <div className="w-2 h-2 rounded-full bg-income" />
-            <span className="text-muted-foreground">{balanceVisible ? `$${formatAmount(balance.income)}` : '****'}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-sm">
-            <div className="w-2 h-2 rounded-full bg-expense" />
-            <span className="text-muted-foreground">{balanceVisible ? `$${formatAmount(balance.expense)}` : '****'}</span>
-          </div>
-        </div>
-      </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="bg-muted/50 rounded-xl p-1 flex">
-          <button
-            type="button"
-            className={cn("flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150", transactionType === "expense" ? "bg-expense text-white shadow-sm" : "text-muted-foreground")}
-            onClick={() => setValue("type", "expense")}
-          >
-            Gasto
+    <div className="flex h-full flex-col">
+      <header className="px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-1">
+        <div className="flex items-center justify-between">
+          <button type="button" onClick={() => setBalanceVisible(v => !v)} className="text-left">
+            <p className="text-[13px] font-medium text-muted-foreground">Saldo disponible</p>
+            {loadingSummary ? (
+              <div className="h-7 w-36 bg-muted rounded mt-1 animate-pulse" />
+            ) : (
+              <p className="mt-0.5 text-[22px] font-bold tracking-[-0.01em] text-foreground tabular-nums">
+                {balanceVisible ? `$${formatAmount(Math.abs(balance.balance))}` : "******"}
+              </p>
+            )}
           </button>
           <button
             type="button"
-            className={cn("flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150", transactionType === "income" ? "bg-income text-white shadow-sm" : "text-muted-foreground")}
-            onClick={() => setValue("type", "income")}
+            onClick={() => navigate("/settings")}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors hover:text-foreground"
           >
-            Ingreso
+            <Settings className="h-5 w-5" />
           </button>
         </div>
+      </header>
 
-        <div className="bg-card rounded-2xl shadow-sm border border-border/50 px-5 py-4">
-          <div className="flex items-center">
-            <span className="text-3xl font-semibold text-muted-foreground mr-2">$</span>
+      <div className="flex-1 overflow-y-auto px-5">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-secondary p-1">
+            {(["expense", "income"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => {
+                  setValue("type", t)
+                  amountRef.current?.focus()
+                }}
+                className={cn(
+                  "rounded-xl py-2.5 text-[15px] font-semibold capitalize transition-all",
+                  transactionType === t
+                    ? t === "income"
+                      ? "bg-card text-income shadow-sm"
+                      : "bg-card text-expense shadow-sm"
+                    : "text-muted-foreground",
+                )}
+              >
+                {t === "expense" ? "Gasto" : "Ingreso"}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-col items-center">
+            <div className="flex items-center justify-center">
+              <span
+                className={cn(
+                  "mr-1 text-4xl font-semibold",
+                  transactionType === "income" ? "text-income" : "text-foreground/40",
+                )}
+              >
+                $
+              </span>
+              <input
+                ref={(e) => {
+                  amountRegisterRef(e)
+                  amountRef.current = e
+                }}
+                autoFocus
+                inputMode="decimal"
+                placeholder="0"
+                value={amountValue}
+                onChange={handleAmountChange}
+                className={cn(
+                  "w-[200px] bg-transparent text-center text-[56px] font-bold leading-none tracking-[-0.03em] outline-none placeholder:text-foreground/20 tabular-nums",
+                  transactionType === "income" ? "text-income" : "text-foreground",
+                )}
+              />
+            </div>
+            <p className="mt-2 text-[13px] text-muted-foreground">
+              {transactionType === "income" ? "Dinero que entra" : "Dinero que sale"}
+            </p>
+          </div>
+
+          <div className="mt-8">
+            <label className="mb-1.5 block px-1 text-[13px] font-medium text-muted-foreground">
+              Descripción
+            </label>
             <input
-              id="amount"
-              type="text"
-              inputMode="numeric"
-              placeholder="0"
-              name="amount"
-              value={amountValue || ""}
-              onChange={handleAmountChange}
-              className="flex-1 bg-transparent text-4xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground/40"
-              ref={(e) => {
-                amountRegisterRef(e)
-                ;(amountRef as React.MutableRefObject<HTMLInputElement | null>).current = e
-              }}
+              placeholder={transactionType === "income" ? "Ej: Salario, reembolso" : "Ej: Café, supermercado"}
+              autoComplete="off"
+              className="w-full rounded-2xl border border-border/70 bg-card px-4 py-3.5 text-[16px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+              {...register("description")}
             />
           </div>
-          {errors.amount && <p className="text-xs text-expense mt-2">{errors.amount.message}</p>}
-        </div>
 
-        <div className="grid grid-cols-[1fr_160px] gap-3">
-          {transactionType === "expense" ? (
-            <div className="min-w-0">
-              <Select
-                onValueChange={(v) => setValue("category", v)}
-                defaultValue=""
-              >
-                <SelectTrigger className="h-12 bg-card rounded-2xl shadow-sm border-border/50 text-base px-5 focus:ring-0">
-                  <SelectValue placeholder="Categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="" disabled>Seleccionar categoría</SelectItem>
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.category && <p className="text-xs text-expense mt-1 ml-1">{errors.category.message}</p>}
-            </div>
-          ) : (
-            <div className="min-w-0">
-              <Input
-                placeholder="Nota"
-                className="h-12 bg-card rounded-2xl shadow-sm border-border/50 text-base px-5"
-                {...register("description")}
-              />
+          {transactionType === "expense" && (
+            <div className="mt-5">
+              <div className="mb-2 flex items-center justify-between px-1">
+                <label className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
+                  <Tag className="h-3.5 w-3.5" /> Categoría
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate("/categories")}
+                  className="text-[13px] font-medium text-primary"
+                >
+                  Administrar
+                </button>
+              </div>
+              <div className="scrollbar-none -mx-5 flex gap-2.5 overflow-x-auto px-5 pb-1">
+                {CATEGORIES.map((cat) => {
+                  const Icon = getCategoryIcon(cat)
+                  const color = getCategoryColor(cat)
+                  const isSelected = watch("category") === cat
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setValue("category", isSelected ? "" : cat, { shouldValidate: true })}
+                      className={cn(
+                        "flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border px-3 py-2.5 transition-all w-[88px] aspect-square",
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border/70 bg-card",
+                      )}
+                    >
+                      <span
+                        className="flex h-9 w-9 items-center justify-center rounded-full"
+                        style={{
+                          backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)`,
+                          color: color,
+                        }}
+                      >
+                        <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+                      </span>
+                      <span
+                        className={cn(
+                          "whitespace-nowrap overflow-hidden text-ellipsis max-w-full text-[12px] font-medium",
+                          isSelected ? "text-foreground" : "text-muted-foreground",
+                        )}
+                      >
+                        {cat}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              {errors.category && <p className="text-xs text-expense mt-1 px-1">{errors.category.message}</p>}
             </div>
           )}
-          <div>
-            <div className="relative h-12">
-              <input
-                type="date"
-                value={watch("transaction_date")}
-                onChange={(e) => setValue("transaction_date", e.target.value, { shouldValidate: true })}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                style={{ zIndex: 1 }}
-              />
-              <div className="h-full w-full bg-card rounded-2xl shadow-sm border border-border/50 px-4 flex items-center text-base pointer-events-none text-muted-foreground">
-                {watch("transaction_date") ? watch("transaction_date").split("-").reverse().join("/") : "Fecha"}
-              </div>
+
+          <div className="mt-8">
+            <div className="mb-2 flex items-center justify-between px-1">
+              <h2 className="text-[15px] font-semibold text-foreground">Recientes</h2>
+              <button
+                type="button"
+                onClick={() => navigate("/history")}
+                className="flex items-center gap-0.5 text-[13px] font-medium text-primary"
+              >
+                Ver todos <ArrowRight className="h-3.5 w-3.5" />
+              </button>
             </div>
-            {errors.transaction_date && <p className="text-xs text-expense mt-1">{errors.transaction_date.message}</p>}
+            {loadingSummary ? (
+              <div className="space-y-0 rounded-2xl border border-border/60 bg-card shadow-card overflow-hidden">
+                {[1,2,3].map((i) => (
+                  <div key={i} className="flex items-center gap-3 px-4 py-3 border-t border-border/60 first:border-t-0">
+                    <div className="w-9 h-9 rounded-full bg-muted animate-pulse shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                      <div className="h-3 w-20 bg-muted rounded animate-pulse" />
+                    </div>
+                    <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            ) : recent.length === 0 ? (
+              <div className="rounded-2xl border border-border/60 bg-card shadow-card px-4 py-8 text-center">
+                <p className="text-sm text-muted-foreground">Sin movimientos</p>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-card">
+                {recent.map((t, i) => {
+                  const Icon = getCategoryIcon(t.type === "income" ? null : t.category)
+                  const color = t.type === "income" ? "var(--income)" : getCategoryColor(t.category)
+                  return (
+                    <div
+                      key={t.id}
+                      className={cn(
+                        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
+                        i > 0 && "border-t border-border/60",
+                      )}
+                    >
+                      <span
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                        style={{
+                          backgroundColor: t.type === "income"
+                            ? "color-mix(in srgb, var(--income) 16%, transparent)"
+                            : `color-mix(in srgb, ${getCategoryColor(t.category)} 16%, transparent)`,
+                          color: color,
+                        }}
+                      >
+                        <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px] font-medium text-foreground">
+                          {t.description || t.type}
+                        </span>
+                        <span className="block text-[12px] text-muted-foreground">
+                          {t.type === "income" ? "Ingreso" : t.category || "Gasto"}
+                        </span>
+                      </span>
+                      <span className={cn("text-[15px] font-semibold tabular-nums", t.type === "income" ? "text-income" : "text-expense")}>
+                        {t.type === "income" ? "+" : "-"}${formatAmount(Number(t.amount))}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
-        </div>
 
-        {transactionType === "expense" && (
-          <Input
-            placeholder="Nota"
-            className="h-12 bg-card rounded-2xl shadow-sm border-border/50 text-base px-5"
-            {...register("description")}
-          />
-        )}
+          <div className="h-4" />
+        </form>
+      </div>
 
+      <div className="sticky bottom-0 border-t border-border/60 bg-background/85 px-5 py-3 backdrop-blur-xl">
         <button
-          type="submit"
-          disabled={loading}
-          className={cn("w-full h-14 rounded-2xl text-base font-semibold transition-all duration-150 active:scale-[0.97]", success ? "bg-income text-white scale-[0.97]" : transactionType === "expense" ? "bg-expense text-white hover:opacity-90" : "bg-income text-white hover:opacity-90")}
+          type="button"
+          disabled={!canSave}
+          onClick={handleSubmit(onSubmit)}
+          className={cn(
+            "flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[17px] font-semibold text-primary-foreground transition-all",
+            canSave ? "bg-primary active:scale-[0.98]" : "bg-primary/40",
+          )}
         >
-          {success ? (
-            <span className="flex items-center justify-center gap-2">
+          {loading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" /> Guardando…
+            </>
+          ) : success ? (
+            <>
               <Check className="h-5 w-5" /> Guardado
-            </span>
-          ) : loading ? (
-            "Guardando..."
+            </>
           ) : (
-            `Agregar ${transactionType === "expense" ? "Gasto" : "Ingreso"}`
+            <>
+              <Check className="h-5 w-5" /> Guardar {transactionType === "expense" ? "Gasto" : "Ingreso"}
+            </>
           )}
         </button>
-      </form>
-
-      <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-5">
-        <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mb-3">Recientes</p>
-        {loadingSummary ? (
-          <div className="space-y-0">
-            {[1,2,3].map((i) => (
-              <div key={i} className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-muted animate-pulse shrink-0" />
-                  <div className="space-y-1.5">
-                    <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-                    <div className="h-3 w-20 bg-muted rounded animate-pulse" />
-                  </div>
-                </div>
-                <div className="h-4 w-16 bg-muted rounded animate-pulse" />
-              </div>
-            ))}
-          </div>
-        ) : recent.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-3">Sin movimientos</p>
-        ) : (
-          <div className="space-y-0">
-            {recent.map((t, i) => (
-              <div
-                key={t.id}
-                className={cn("flex items-center justify-between py-3", i < recent.length - 1 && "border-b border-border/50")}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={cn("shrink-0 w-9 h-9 rounded-full flex items-center justify-center", t.type === "income" ? "bg-income/10" : "bg-expense/10")}>
-                    {t.type === "income" ? (
-                      <ArrowUpRight className="h-4 w-4 text-income" />
-                    ) : (
-                      <ArrowDownRight className="h-4 w-4 text-expense" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{t.description || t.category || t.type}</p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(t.transaction_date), "d MMM", { locale: es })}</p>
-                  </div>
-                </div>
-                <p className={cn("shrink-0 text-sm font-semibold", t.type === "income" ? "text-income" : "text-expense")}>
-                  {t.type === "income" ? "+" : "-"}${formatAmount(Number(t.amount))}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
       <Toast message={toast} type={toastType} onClose={() => setToast(null)} />
     </div>

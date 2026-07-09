@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase"
 import type { Transaction, InsertTransaction } from "@/types"
+import { format, startOfMonth, endOfMonth } from "date-fns"
+import { es } from "date-fns/locale"
 
 export async function getTransactions({
   pageParam = 0,
@@ -128,6 +130,32 @@ export async function updateTransaction(
 export async function deleteTransaction(id: string): Promise<void> {
   const { error } = await supabase.from("transactions").delete().eq("id", id)
   if (error) throw error
+}
+
+export async function getMonthlyTotals(
+  months: number
+): Promise<{ month: string; income: number; expense: number }[]> {
+  const result: { month: string; income: number; expense: number }[] = []
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date()
+    d.setMonth(d.getMonth() - i)
+    const from = format(startOfMonth(d), "yyyy-MM-dd")
+    const to = format(endOfMonth(d), "yyyy-MM-dd")
+    const monthLabel = format(d, "MMM", { locale: es })
+
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("type, amount")
+      .gte("transaction_date", from)
+      .lte("transaction_date", to)
+
+    if (error) throw error
+
+    const income = data.filter((t) => t.type === "income").reduce((sum, t) => sum + Number(t.amount), 0)
+    const expense = data.filter((t) => t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0)
+    result.push({ month: monthLabel, income, expense })
+  }
+  return result
 }
 
 export async function getExpensesByCategory(

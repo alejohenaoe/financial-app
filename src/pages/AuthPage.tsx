@@ -96,10 +96,10 @@ export function AuthPage() {
                   style: {
                     input: {
                       borderRadius: 12,
-                      border: "1px solid #E5E5EA",
+                      border: "1px solid var(--border)",
                       padding: "12px 16px",
                       fontSize: 16,
-                      backgroundColor: "white",
+                      backgroundColor: "var(--card)",
                       outline: "none",
                     },
                     button: {
@@ -107,14 +107,14 @@ export function AuthPage() {
                       fontWeight: 600,
                       fontSize: 16,
                       height: 48,
-                      backgroundColor: isSignIn ? "#007AFF" : "#34C759",
+                      backgroundColor: isSignIn ? "var(--primary)" : "var(--income)",
                       color: "white",
                       border: "none",
                     },
                     label: {
                       fontSize: 12,
                       fontWeight: 500,
-                      color: "#8E8E93",
+                      color: "var(--muted-foreground)",
                       marginBottom: 6,
                     },
                     container: {
@@ -127,7 +127,7 @@ export function AuthPage() {
                     },
                   },
                 }}
-                theme="light"
+                theme={document.documentElement.classList.contains("dark") ? "dark" : "light"}
                 providers={[]}
                 localization={localization}
                 view={authView}

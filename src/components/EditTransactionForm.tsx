@@ -87,7 +87,7 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
           className={cn(
             "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
             transactionType === "expense"
-              ? "bg-expense text-white shadow-sm"
+              ? "bg-expense text-primary-foreground shadow-sm"
               : "text-muted-foreground"
           )}
           onClick={() => setValue("type", "expense")}
@@ -99,7 +99,7 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
           className={cn(
             "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
             transactionType === "income"
-              ? "bg-income text-white shadow-sm"
+              ? "bg-income text-primary-foreground shadow-sm"
               : "text-muted-foreground"
           )}
           onClick={() => setValue("type", "income")}
@@ -150,8 +150,8 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
         className={cn(
           "w-full h-12 rounded-2xl text-base font-semibold transition-all duration-150 active:scale-[0.97]",
           transactionType === "expense"
-            ? "bg-expense text-white hover:opacity-90"
-            : "bg-income text-white hover:opacity-90"
+            ? "bg-expense text-primary-foreground hover:opacity-90"
+            : "bg-income text-primary-foreground hover:opacity-90"
         )}
       >
         {loading ? "Guardando..." : "Guardar Cambios"}

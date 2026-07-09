@@ -4,6 +4,8 @@ import { AuthPage } from "@/pages/AuthPage"
 import { Home } from "@/pages/Home"
 import { History } from "@/pages/History"
 import { Analytics } from "@/pages/Analytics"
+import { SettingsPage } from "@/pages/SettingsPage"
+import { CategoriesPage } from "@/pages/CategoriesPage"
 import { Layout } from "@/components/Layout"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -43,7 +45,16 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="history" element={<History />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
+        <Route
+          path="/categories"
+          element={
+            <ProtectedRoute>
+              <CategoriesPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -1,37 +1,96 @@
 import { useState, useCallback, useEffect, useRef } from "react"
-import { getTransactions, deleteTransaction } from "@/services/transaction"
+import { getTransactions, deleteTransaction, getBalance } from "@/services/transaction"
 import { CATEGORIES, type Transaction } from "@/types"
-import { format } from "date-fns"
+import { format, isToday, isYesterday, parseISO, startOfMonth, endOfMonth } from "date-fns"
 import { es } from "date-fns/locale"
-import { ArrowDownRight, ArrowUpRight, Search, Trash2, Pencil, TriangleAlert } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ArrowUpRight, Trash2, Pencil, TriangleAlert } from "lucide-react"
+import { getCategoryIcon, getCategoryColor } from "@/lib/categories"
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EditTransactionForm } from "@/components/EditTransactionForm"
-import { DatePicker } from "@/components/DatePicker"
 import { Toast } from "@/components/Toast"
 import { cn, formatAmount } from "@/lib/utils"
+
+function getMonthRange(monthOffset: number) {
+  const now = new Date()
+  const date = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1)
+  return {
+    from: format(startOfMonth(date), "yyyy-MM-dd"),
+    to: format(endOfMonth(date), "yyyy-MM-dd"),
+    label: format(date, "MMMM yyyy", { locale: es }),
+  }
+}
+
+const MONTH_OPTIONS = [
+  { value: "all", label: "Todos los meses" },
+  { value: "0", ...getMonthRange(0) },
+  { value: "-1", ...getMonthRange(-1) },
+  { value: "-2", ...getMonthRange(-2) },
+  { value: "-3", ...getMonthRange(-3) },
+  { value: "-4", ...getMonthRange(-4) },
+  { value: "-5", ...getMonthRange(-5) },
+]
+
+function formatDateGroup(dateStr: string) {
+  const d = parseISO(dateStr)
+  if (isToday(d)) return "Hoy"
+  if (isYesterday(d)) return "Ayer"
+  return format(d, "EEEE, d 'de' MMMM", { locale: es })
+}
+
+function formatTransactionDate(dateStr: string) {
+  const d = parseISO(dateStr)
+  if (isToday(d)) return "Hoy"
+  if (isYesterday(d)) return "Ayer"
+  return format(d, "d MMM", { locale: es })
+}
 
 export function History() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(false)
-  const [search, setSearch] = useState("")
-  const [typeFilter, setTypeFilter] = useState("all")
+  const [monthFilter, setMonthFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [totals, setTotals] = useState({ income: 0, expense: 0 })
   const [editTxn, setEditTxn] = useState<Transaction | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteConfirmTxn, setDeleteConfirmTxn] = useState<Transaction | null>(null)
-  const [dateFrom, setDateFrom] = useState("")
-  const [dateTo, setDateTo] = useState("")
   const [toast, setToast] = useState<string | null>(null)
   const [toastType, setToastType] = useState<"error" | "success">("error")
-
-  const filterLabels: Record<string, string> = { all: "Todos", income: "Ingreso", expense: "Gasto" }
 
   const pageRef = useRef(0)
   const loadingRef = useRef(false)
   const hasMoreRef = useRef(true)
+
+  useEffect(() => {
+    if (monthFilter !== "all") {
+      const month = MONTH_OPTIONS.find(m => m.value === monthFilter)
+      if (month && "from" in month) {
+        loadTotals(month.from, month.to)
+        return
+      }
+    }
+    loadTotals()
+  }, [monthFilter])
+
+  async function loadTotals(from?: string, to?: string) {
+    try {
+      const bal = await getBalance()
+      if (from && to) {
+        const all = await getTransactions({ pageParam: 0, dateFrom: from, dateTo: to })
+        const allTxns = all.data
+        let income = 0, expense = 0
+        for (const t of allTxns) {
+          if (t.type === "income") income += Number(t.amount)
+          else expense += Number(t.amount)
+        }
+        setTotals({ income, expense })
+      } else {
+        setTotals({ income: bal.income, expense: bal.expense })
+      }
+    } catch {
+      setTotals({ income: 0, expense: 0 })
+    }
+  }
 
   const loadMore = useCallback(async () => {
     if (loadingRef.current || !hasMoreRef.current) return
@@ -39,13 +98,20 @@ export function History() {
     setLoading(true)
     const currentPage = pageRef.current
     try {
+      let dateFrom: string | undefined
+      let dateTo: string | undefined
+      if (monthFilter !== "all") {
+        const month = MONTH_OPTIONS.find(m => m.value === monthFilter)
+        if (month && "from" in month) {
+          dateFrom = month.from
+          dateTo = month.to
+        }
+      }
       const result = await getTransactions({
         pageParam: currentPage,
-        search,
-        type: typeFilter,
-        category: categoryFilter,
-        dateFrom: dateFrom || undefined,
-        dateTo: dateTo || undefined,
+        category: categoryFilter !== "all" ? categoryFilter : undefined,
+        dateFrom,
+        dateTo,
       })
       if (currentPage === 0) {
         setTransactions(result.data)
@@ -61,7 +127,7 @@ export function History() {
       loadingRef.current = false
       setLoading(false)
     }
-  }, [search, typeFilter, categoryFilter, dateFrom, dateTo])
+  }, [monthFilter, categoryFilter])
 
   useEffect(() => {
     pageRef.current = 0
@@ -70,14 +136,6 @@ export function History() {
     setTransactions([])
     loadMore()
   }, [loadMore])
-
-  useEffect(() => {
-    if (typeFilter === "income") {
-      setCategoryFilter("all")
-      setDateFrom("")
-      setDateTo("")
-    }
-  }, [typeFilter])
 
   const sentinelRef = useInfiniteScroll(loadMore, hasMoreRef.current && !loading)
 
@@ -105,107 +163,130 @@ export function History() {
     loadMore()
   }
 
+  const grouped = transactions.reduce<Record<string, Transaction[]>>((acc, t) => {
+    const key = formatDateGroup(t.transaction_date)
+    if (!acc[key]) acc[key] = []
+    acc[key].push(t)
+    return acc
+  }, {})
+
   return (
-    <div className="space-y-4">
-      <div className="bg-card rounded-2xl shadow-sm border border-border/50 px-4 py-3 flex items-center gap-2">
-        <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-        <input
-          placeholder="Buscar movimientos..."
-          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-
-      <div className="bg-muted/50 rounded-xl p-1 flex">
-        {["all", "income", "expense"].map((type) => (
-          <button
-            key={type}
-            className={cn(
-              "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
-              typeFilter === type
-                ? "bg-white text-foreground shadow-sm"
-                : "text-muted-foreground"
-            )}
-            onClick={() => setTypeFilter(type)}
+    <div className="space-y-4 pt-2">
+      <div className="flex gap-2">
+        <div className="flex-1 bg-card rounded-2xl shadow-sm border border-border px-4 py-3">
+          <select
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+            className="w-full bg-transparent text-sm font-medium text-foreground outline-none"
           >
-            {filterLabels[type]}
-          </button>
-        ))}
+            {MONTH_OPTIONS.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label.charAt(0).toUpperCase() + m.label.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {typeFilter !== "income" && (
-        <div className="bg-card rounded-2xl shadow-sm border border-border/50 px-4 py-3">
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full bg-transparent border-none shadow-none text-sm p-0 h-auto focus:ring-0">
-              <SelectValue placeholder="Todas las categorías" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las categorías</SelectItem>
-              {CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="bg-card rounded-2xl shadow-sm border border-border px-5 py-3 flex items-center gap-6">
+        <div>
+          <p className="text-xs text-muted-foreground">Ingresos</p>
+          <p className="text-sm font-semibold text-income">+${formatAmount(totals.income)}</p>
         </div>
-      )}
+        <div className="w-px h-8 bg-border" />
+        <div>
+          <p className="text-xs text-muted-foreground">Gastos</p>
+          <p className="text-sm font-semibold text-expense">-${formatAmount(totals.expense)}</p>
+        </div>
+      </div>
 
-      {typeFilter !== "income" && (
-        <div className="flex gap-2">
-          <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="Desde" />
-          <DatePicker value={dateTo} onChange={setDateTo} placeholder="Hasta" />
-        </div>
-      )}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">
+        <button
+          onClick={() => setCategoryFilter("all")}
+          className={cn(
+            "shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 border",
+            categoryFilter === "all"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-card text-foreground border-border"
+          )}
+        >
+          Todos
+        </button>
+        {CATEGORIES.map((cat) => {
+          const Icon = getCategoryIcon(cat)
+          const isActive = categoryFilter === cat
+          return (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              className={cn(
+                "shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 border",
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-foreground border-border hover:border-primary/30"
+              )}
+            >
+              <Icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "")} style={!isActive ? { color: getCategoryColor(cat) } : undefined} />
+              {cat}
+            </button>
+          )
+        })}
+      </div>
 
       {transactions.length === 0 && !loading ? (
         <p className="text-sm text-muted-foreground text-center py-8">Sin movimientos</p>
       ) : (
-        <div className="space-y-2">
-          {transactions.map((t) => (
-            <div
-              key={t.id}
-              className="bg-card rounded-2xl shadow-sm border border-border/50 px-4 py-3"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className={cn(
-                    "shrink-0 w-9 h-9 rounded-full flex items-center justify-center",
-                    t.type === "income" ? "bg-income/10" : "bg-expense/10"
-                  )}>
-                    {t.type === "income" ? (
-                      <ArrowUpRight className="h-4 w-4 text-income" />
-                    ) : (
-                      <ArrowDownRight className="h-4 w-4 text-expense" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{t.description || t.category || t.type}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(t.transaction_date), "d MMM, yyyy", { locale: es })}
-                      {t.category && <span className="ml-1.5">· {t.category}</span>}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <p className={cn(
-                    "text-sm font-semibold mr-1",
-                    t.type === "income" ? "text-income" : "text-expense"
-                  )}>
-                    {t.type === "income" ? "+" : "-"}${formatAmount(Number(t.amount))}
-                  </p>
-                  <button
-                    onClick={() => handleEdit(t)}
-                    className="p-1.5 rounded-full hover:bg-muted transition-colors"
-                  >
-                    <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirmTxn(t)}
-                    className="p-1.5 rounded-full hover:bg-muted transition-colors"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 text-expense" />
-                  </button>
-                </div>
+        <div className="space-y-4">
+          {Object.entries(grouped).map(([dateLabel, txns]) => (
+            <div key={dateLabel}>
+              <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase mb-2 px-1">
+                {dateLabel}
+              </p>
+              <div className="space-y-1">
+                {txns.map((t) => {
+                  const Icon = t.type === "income" ? ArrowUpRight : getCategoryIcon(t.category)
+                  const iconColor = t.type === "income" ? "var(--income)" : getCategoryColor(t.category)
+                  const bgClass = t.type === "income" ? "bg-income/10" : "bg-secondary"
+                  return (
+                    <div
+                      key={t.id}
+                      className="bg-card rounded-2xl shadow-sm border border-border px-4 py-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={cn("shrink-0 w-9 h-9 rounded-full flex items-center justify-center", bgClass)}>
+                            <Icon className="h-4 w-4" style={{ color: iconColor }} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate text-foreground">{t.description || t.type}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {t.category && <span>{t.category}</span>}
+                              {t.category && <span className="mx-1">·</span>}
+                              <span>{formatTransactionDate(t.transaction_date)}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <p className={cn("text-sm font-semibold mr-1", t.type === "income" ? "text-income" : "text-expense")}>
+                            {t.type === "income" ? "+" : "-"}${formatAmount(Number(t.amount))}
+                          </p>
+                          <button
+                            onClick={() => handleEdit(t)}
+                            className="p-1.5 rounded-full hover:bg-secondary transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirmTxn(t)}
+                            className="p-1.5 rounded-full hover:bg-secondary transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-expense" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))}
@@ -249,7 +330,7 @@ export function History() {
             <button
               type="button"
               onClick={() => setDeleteConfirmTxn(null)}
-              className="flex-1 h-11 rounded-xl text-sm font-medium bg-muted text-foreground hover:opacity-80 transition-opacity"
+              className="flex-1 h-11 rounded-xl text-sm font-medium bg-secondary text-foreground hover:opacity-80 transition-opacity"
             >
               Cancelar
             </button>
@@ -259,7 +340,7 @@ export function History() {
                 if (deleteConfirmTxn) handleDelete(deleteConfirmTxn.id)
                 setDeleteConfirmTxn(null)
               }}
-              className="flex-1 h-11 rounded-xl text-sm font-medium bg-expense text-white hover:opacity-90 transition-opacity"
+              className="flex-1 h-11 rounded-xl text-sm font-medium bg-expense text-primary-foreground hover:opacity-90 transition-opacity"
             >
               Eliminar
             </button>

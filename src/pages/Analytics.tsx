@@ -1,132 +1,144 @@
 import { useState } from "react"
-import { getExpensesByCategory } from "@/services/transaction"
+import { getBalance, getExpensesByCategory, getMonthlyTotals } from "@/services/transaction"
 import { useEffect } from "react"
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
-import { startOfMonth, endOfMonth, startOfYear, endOfYear, format, subMonths } from "date-fns"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from "recharts"
+import { format, startOfMonth, endOfMonth } from "date-fns"
+import { es } from "date-fns/locale"
 import { Toast } from "@/components/Toast"
 import { cn, formatAmount } from "@/lib/utils"
-
-type Period = "current-month" | "prev-month" | "current-year"
-
-function getDateRange(period: Period): { from: string; to: string } {
-  const now = new Date()
-  switch (period) {
-    case "current-month":
-      return { from: format(startOfMonth(now), "yyyy-MM-dd"), to: format(endOfMonth(now), "yyyy-MM-dd") }
-    case "prev-month": {
-      const prev = subMonths(now, 1)
-      return { from: format(startOfMonth(prev), "yyyy-MM-dd"), to: format(endOfMonth(prev), "yyyy-MM-dd") }
-    }
-    case "current-year":
-      return { from: format(startOfYear(now), "yyyy-MM-dd"), to: format(endOfYear(now), "yyyy-MM-dd") }
-  }
-}
-
-const CHART_COLORS = [
-  "#007AFF", "#FF9500", "#34C759", "#FF3B30", "#AF52DE",
-  "#5856D6", "#FF2D55", "#00C7BE", "#FF6482", "#5AC8FA",
-]
+import { getCategoryColor } from "@/lib/categories"
 
 export function Analytics() {
-  const [period, setPeriod] = useState<Period>("current-month")
-  const [data, setData] = useState<{ category: string; total: number; percentage: number }[]>([])
+  const [balance, setBalance] = useState({ income: 0, expense: 0, balance: 0 })
+  const [categoryData, setCategoryData] = useState<{ category: string; total: number; percentage: number }[]>([])
+  const [monthlyData, setMonthlyData] = useState<{ month: string; income: number; expense: number }[]>([])
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
-  }, [period])
+  }, [])
 
   async function loadData() {
     try {
-      const range = getDateRange(period)
-      const result = await getExpensesByCategory(range.from, range.to)
-      setData(result)
+      const now = new Date()
+      const from = format(startOfMonth(now), "yyyy-MM-dd")
+      const to = format(endOfMonth(now), "yyyy-MM-dd")
+
+      const [bal, categories, monthly] = await Promise.all([
+        getBalance(),
+        getExpensesByCategory(from, to),
+        getMonthlyTotals(3),
+      ])
+      setBalance(bal)
+      setCategoryData(categories)
+      setMonthlyData(monthly)
     } catch {
       setToast("Error al cargar estadísticas")
     }
   }
 
-  const totalExpenses = data.reduce((sum, d) => sum + d.total, 0)
-
-  const periods = [
-    { value: "current-month" as const, label: "Mes" },
-    { value: "prev-month" as const, label: "Mes Ant." },
-    { value: "current-year" as const, label: "Año" },
-  ]
+  const totalExpenses = categoryData.reduce((sum, d) => sum + d.total, 0)
+  const netThisMonth = monthlyData.length > 0
+    ? monthlyData[monthlyData.length - 1].income - monthlyData[monthlyData.length - 1].expense
+    : 0
 
   return (
-    <div className="space-y-5">
-      <div className="bg-muted/50 rounded-xl p-1 flex">
-        {periods.map((p) => (
-          <button
-            key={p.value}
-            className={cn(
-              "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
-              period === p.value
-                ? "bg-white text-foreground shadow-sm"
-                : "text-muted-foreground"
-            )}
-            onClick={() => setPeriod(p.value)}
-          >
-            {p.label}
-          </button>
-        ))}
+    <div className="space-y-4 pt-2">
+      <div className="bg-card rounded-2xl shadow-sm border border-border p-5 text-center">
+        <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase">Balance total</p>
+        <p className={cn("text-4xl font-light tracking-tight mt-1", balance.balance < 0 ? "text-expense" : "text-foreground")}>
+          ${formatAmount(Math.abs(balance.balance))}
+        </p>
+        <p className={cn("text-sm mt-1 font-medium", netThisMonth >= 0 ? "text-income" : "text-expense")}>
+          {netThisMonth >= 0 ? "+" : ""}${formatAmount(Math.abs(netThisMonth))} este mes
+        </p>
       </div>
 
-      {data.length === 0 ? (
-        <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-8">
-          <p className="text-sm text-muted-foreground text-center">Sin gastos en este período</p>
+      <div className="flex gap-3">
+        <div className="flex-1 bg-card rounded-2xl shadow-sm border border-border p-4">
+          <p className="text-xs text-muted-foreground">Ingresos</p>
+          <p className="text-lg font-semibold text-income mt-1">+${formatAmount(balance.income)}</p>
         </div>
-      ) : (
-        <>
-          <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-5">
-            <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mb-1">Total Gastado</p>
-            <p className="text-3xl font-semibold tracking-tight">${formatAmount(totalExpenses)}</p>
-            <div className="h-48 mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                  <XAxis dataKey="category" tick={{ fontSize: 11, fill: "#8E8E93" }} axisLine={false} tickLine={false} />
-                  <YAxis hide />
-                  <Tooltip
-                    formatter={(value: number) => [`$${formatAmount(value)}`, "Monto"]}
-                    contentStyle={{ borderRadius: 12, border: "1px solid #E5E5EA", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-                  />
-                  <Bar dataKey="total" radius={[6, 6, 0, 0]} maxBarSize={32}>
-                    {data.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+        <div className="flex-1 bg-card rounded-2xl shadow-sm border border-border p-4">
+          <p className="text-xs text-muted-foreground">Gastos</p>
+          <p className="text-lg font-semibold text-expense mt-1">-${formatAmount(balance.expense)}</p>
+        </div>
+      </div>
 
-          <div className="bg-card rounded-2xl shadow-sm border border-border/50 p-5">
-            <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mb-4">Desglose</p>
-            <div className="space-y-3">
-              {data.map((d, i) => (
-                <div key={d.category}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                      <span className="text-sm">{d.category}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium">${formatAmount(d.total)}</span>
-                      <span className="text-xs text-muted-foreground w-8 text-right">{d.percentage}%</span>
-                    </div>
+      {monthlyData.length > 0 && (
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-5">
+          <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-4">Ingresos vs Gastos</p>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--background)" />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                <YAxis hide />
+                <Tooltip
+                  formatter={(value: number, name: string) => [`$${formatAmount(value)}`, name === "income" ? "Ingresos" : "Gastos"]}
+                  contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+                />
+                <Bar dataKey="income" name="income" fill="var(--income)" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                <Bar dataKey="expense" name="expense" fill="var(--expense)" radius={[4, 4, 0, 0]} maxBarSize={24} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {categoryData.length > 0 && (
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-5">
+          <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-1">Gastado</p>
+          <p className="text-2xl font-semibold tracking-tight text-foreground mb-4">${formatAmount(totalExpenses)}</p>
+          <div className="space-y-3">
+            {categoryData.map((d) => (
+              <div key={d.category}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getCategoryColor(d.category) }} />
+                    <span className="text-sm text-foreground">{d.category}</span>
                   </div>
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{ width: `${d.percentage}%`, backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
-                    />
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-foreground">${formatAmount(d.total)}</span>
+                    <span className="text-xs text-muted-foreground w-8 text-right">{d.percentage}%</span>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{ width: `${d.percentage}%`, backgroundColor: getCategoryColor(d.category) }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-        </>
+        </div>
+      )}
+
+      {monthlyData.length > 0 && (
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-5">
+          <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-4">Tendencia de gastos</p>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--background)" />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                <YAxis hide />
+                <Tooltip
+                  formatter={(value: number) => [`$${formatAmount(value)}`, "Gastos"]}
+                  contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+                />
+                <Line type="monotone" dataKey="expense" stroke="var(--expense)" strokeWidth={2} dot={{ fill: "var(--expense)", r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {categoryData.length === 0 && monthlyData.length === 0 && (
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
+          <p className="text-sm text-muted-foreground text-center">Sin datos en este período</p>
+        </div>
       )}
       <Toast message={toast} type="error" onClose={() => setToast(null)} />
     </div>
