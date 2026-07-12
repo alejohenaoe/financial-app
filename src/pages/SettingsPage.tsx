@@ -22,7 +22,7 @@ export function SettingsPage() {
   }, [darkMode])
 
   return (
-    <div className="space-y-6 pt-2 pb-4">
+    <div className="space-y-6 pt-2 pb-4 px-5">
       <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
         <div className="px-5 pt-5 pb-2">
           <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase">Preferencias</p>

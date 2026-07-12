@@ -171,9 +171,9 @@ export function History() {
   }, {})
 
   return (
-    <div className="space-y-4 pt-2">
+    <div className="space-y-4 pt-2 px-5">
       <div className="flex gap-2">
-        <div className="flex-1 bg-card rounded-2xl shadow-sm border border-border px-4 py-3">
+        <div className="flex-1 bg-card rounded-3xl shadow-sm border border-border px-4 py-3">
           <select
             value={monthFilter}
             onChange={(e) => setMonthFilter(e.target.value)}
@@ -188,7 +188,7 @@ export function History() {
         </div>
       </div>
 
-      <div className="bg-card rounded-2xl shadow-sm border border-border px-5 py-3 flex items-center gap-6">
+      <div className="bg-card rounded-3xl shadow-sm border border-border px-5 py-3 flex items-center gap-6">
         <div>
           <p className="text-xs text-muted-foreground">Ingresos</p>
           <p className="text-sm font-semibold text-income">+${formatAmount(totals.income)}</p>
@@ -200,7 +200,7 @@ export function History() {
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-5 px-5">
         <button
           onClick={() => setCategoryFilter("all")}
           className={cn(
@@ -250,7 +250,7 @@ export function History() {
                   return (
                     <div
                       key={t.id}
-                      className="bg-card rounded-2xl shadow-sm border border-border px-4 py-3"
+                      className="bg-card rounded-3xl shadow-sm border border-border px-4 py-3"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 min-w-0 flex-1">

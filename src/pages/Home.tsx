@@ -162,7 +162,7 @@ export function Home() {
 
       <div className="flex-1 overflow-y-auto px-5">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-secondary p-1">
+          <div className="mt-4 grid grid-cols-2 gap-1 rounded-full bg-secondary p-1">
             {(["expense", "income"] as const).map((t) => (
               <button
                 key={t}
@@ -172,7 +172,7 @@ export function Home() {
                   amountRef.current?.focus()
                 }}
                 className={cn(
-                  "rounded-xl py-2.5 text-[15px] font-semibold capitalize transition-all",
+                  "rounded-full py-2.5 text-[15px] font-semibold capitalize transition-all",
                   transactionType === t
                     ? t === "income"
                       ? "bg-card text-income shadow-sm"
@@ -223,7 +223,7 @@ export function Home() {
             <input
               placeholder={transactionType === "income" ? "Ej: Salario, reembolso" : "Ej: Café, supermercado"}
               autoComplete="off"
-              className="w-full rounded-2xl border border-border/70 bg-card px-4 py-3.5 text-[16px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary"
+              className="w-full rounded-full border border-border/70 bg-card px-4 py-3.5 text-[16px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary shadow-md"
               {...register("description")}
             />
           </div>
@@ -364,7 +364,7 @@ export function Home() {
           disabled={!canSave}
           onClick={handleSubmit(onSubmit)}
           className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[17px] font-semibold text-primary-foreground transition-all",
+            "flex w-full items-center justify-center gap-2 rounded-full py-4 text-[17px] font-semibold text-primary-foreground transition-all",
             canSave ? "bg-primary active:scale-[0.98]" : "bg-primary/40",
           )}
         >

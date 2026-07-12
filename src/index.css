@@ -87,7 +87,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   }
 }
 
@@ -97,4 +97,33 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.8); }
+  70% { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+@utility animate-shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+@utility animate-pop-in {
+  animation: pop-in 0.4s ease-out both;
 }

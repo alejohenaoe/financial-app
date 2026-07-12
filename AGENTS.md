@@ -79,4 +79,5 @@ npm run preview # Preview production build
 - Layout: `h-dvh` + `overflow-y-auto` on container, not `min-h-screen` (consistent sticky nav, no horizontal scroll)
 - Service worker: network-first navigate, cache `/index.html` fallback for Android PWA refresh 404
 - `vercel.json`: SPA rewrite all routes to `/index.html`
+- **Deploy:** Automático al hacer push a `main` en GitHub. No instalar Vercel CLI ni ejecutar `vercel deploy`.
 - getBalance() uses `select("type, amount")` + filter/reduce in JS (not aggregate query — tried and reverted, see `docs/AUDITORIA.md`)

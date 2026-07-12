@@ -43,8 +43,8 @@ export function Analytics() {
     : 0
 
   return (
-    <div className="space-y-4 pt-2">
-      <div className="bg-card rounded-2xl shadow-sm border border-border p-5 text-center">
+    <div className="space-y-4 pt-2 px-5">
+      <div className="bg-card rounded-3xl shadow-sm border border-border p-5 text-center">
         <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase">Balance total</p>
         <p className={cn("text-4xl font-light tracking-tight mt-1", balance.balance < 0 ? "text-expense" : "text-foreground")}>
           ${formatAmount(Math.abs(balance.balance))}
@@ -55,18 +55,18 @@ export function Analytics() {
       </div>
 
       <div className="flex gap-3">
-        <div className="flex-1 bg-card rounded-2xl shadow-sm border border-border p-4">
+        <div className="flex-1 bg-card rounded-3xl shadow-sm border border-border p-4">
           <p className="text-xs text-muted-foreground">Ingresos</p>
           <p className="text-lg font-semibold text-income mt-1">+${formatAmount(balance.income)}</p>
         </div>
-        <div className="flex-1 bg-card rounded-2xl shadow-sm border border-border p-4">
+        <div className="flex-1 bg-card rounded-3xl shadow-sm border border-border p-4">
           <p className="text-xs text-muted-foreground">Gastos</p>
           <p className="text-lg font-semibold text-expense mt-1">-${formatAmount(balance.expense)}</p>
         </div>
       </div>
 
       {monthlyData.length > 0 && (
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-5">
+        <div className="bg-card rounded-3xl shadow-sm border border-border p-5">
           <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-4">Ingresos vs Gastos</p>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
@@ -87,7 +87,7 @@ export function Analytics() {
       )}
 
       {categoryData.length > 0 && (
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-5">
+        <div className="bg-card rounded-3xl shadow-sm border border-border p-5">
           <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-1">Gastado</p>
           <p className="text-2xl font-semibold tracking-tight text-foreground mb-4">${formatAmount(totalExpenses)}</p>
           <div className="space-y-3">
@@ -116,7 +116,7 @@ export function Analytics() {
       )}
 
       {monthlyData.length > 0 && (
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-5">
+        <div className="bg-card rounded-3xl shadow-sm border border-border p-5">
           <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-4">Tendencia de gastos</p>
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
