@@ -200,7 +200,6 @@ export function Home() {
                   amountRegisterRef(e)
                   amountRef.current = e
                 }}
-                autoFocus
                 inputMode="decimal"
                 placeholder="0"
                 value={amountValue}
