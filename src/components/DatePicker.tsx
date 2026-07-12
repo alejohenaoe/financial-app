@@ -55,7 +55,7 @@ export function DatePicker({ value, onChange, placeholder }: DatePickerProps) {
   return (
     <div ref={containerRef} className="relative flex-1">
       <div
-        className="h-12 w-full bg-card rounded-2xl shadow-sm border border-border/50 px-4 flex items-center text-sm cursor-pointer select-none text-muted-foreground"
+        className="h-12 w-full bg-card rounded-full shadow-sm border border-border/50 px-4 flex items-center text-sm cursor-pointer select-none text-muted-foreground"
         onClick={() => setOpen(v => !v)}
       >
         {value ? value.split("-").reverse().join("/") : placeholder}

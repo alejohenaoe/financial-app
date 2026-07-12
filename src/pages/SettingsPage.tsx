@@ -23,7 +23,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6 pt-2 pb-4 px-5">
-      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
         <div className="px-5 pt-5 pb-2">
           <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase">Preferencias</p>
         </div>
@@ -56,7 +56,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
         <div className="px-5 pt-5 pb-2">
           <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase">Datos</p>
         </div>
@@ -72,7 +72,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
         <div className="px-5 pt-5 pb-2">
           <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase">Acerca de</p>
         </div>
@@ -105,7 +105,7 @@ export function SettingsPage() {
             <button
               type="button"
               onClick={() => setLogoutOpen(false)}
-              className="flex-1 h-11 rounded-xl text-sm font-medium bg-secondary text-foreground hover:opacity-80 transition-opacity"
+              className="flex-1 h-11 rounded-full text-sm font-medium bg-secondary text-foreground hover:opacity-80 transition-opacity"
             >
               Cancelar
             </button>
@@ -115,7 +115,7 @@ export function SettingsPage() {
                 supabase.auth.signOut()
                 setLogoutOpen(false)
               }}
-              className="flex-1 h-11 rounded-xl text-sm font-medium bg-expense text-primary-foreground hover:opacity-90 transition-opacity"
+              className="flex-1 h-11 rounded-full text-sm font-medium bg-expense text-primary-foreground hover:opacity-90 transition-opacity"
             >
               Cerrar sesión
             </button>

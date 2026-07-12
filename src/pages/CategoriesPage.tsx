@@ -102,7 +102,7 @@ export function CategoriesPage() {
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1 rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground"
+          className="flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground"
         >
           <Plus className="h-4 w-4" /> Agregar
         </button>
@@ -110,7 +110,7 @@ export function CategoriesPage() {
 
       <div className="flex-1 overflow-y-auto px-5 pb-4">
         {adding && (
-          <div className="mb-3 flex items-center gap-2 rounded-2xl border border-primary/50 bg-card px-4 py-3 shadow-sm">
+          <div className="mb-3 flex items-center gap-2 rounded-full border border-primary/50 bg-card px-4 py-3 shadow-sm">
             <input
               autoFocus
               value={newName}
@@ -167,7 +167,7 @@ export function CategoriesPage() {
                     autoFocus
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 rounded-lg border border-border/70 bg-muted px-3 py-1.5 text-[15px] text-foreground outline-none"
+                    className="flex-1 rounded-full border border-border/70 bg-muted px-3 py-1.5 text-[15px] text-foreground outline-none"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") saveEdit(item.id)
                       if (e.key === "Escape") cancelEdit()
@@ -244,14 +244,14 @@ export function CategoriesPage() {
             <button
               type="button"
               onClick={() => setDeleteTarget(null)}
-              className="flex-1 h-11 rounded-xl text-sm font-medium bg-secondary text-secondary-foreground hover:opacity-80 transition-opacity"
+              className="flex-1 h-11 rounded-full text-sm font-medium bg-secondary text-secondary-foreground hover:opacity-80 transition-opacity"
             >
               Cancelar
             </button>
             <button
               type="button"
               onClick={confirmDelete}
-              className="flex-1 h-11 rounded-xl text-sm font-medium bg-expense text-primary-foreground hover:opacity-90 transition-opacity"
+              className="flex-1 h-11 rounded-full text-sm font-medium bg-expense text-primary-foreground hover:opacity-90 transition-opacity"
             >
               Eliminar
             </button>

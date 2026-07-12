@@ -81,11 +81,11 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="bg-muted/50 rounded-xl p-1 flex">
+      <div className="bg-muted/50 rounded-full p-1 flex">
         <button
           type="button"
           className={cn(
-            "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
+            "flex-1 py-2 text-sm font-medium rounded-full transition-all duration-150",
             transactionType === "expense"
               ? "bg-expense text-primary-foreground shadow-sm"
               : "text-muted-foreground"
@@ -97,7 +97,7 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
         <button
           type="button"
           className={cn(
-            "flex-1 py-2 text-sm font-medium rounded-[10px] transition-all duration-150",
+            "flex-1 py-2 text-sm font-medium rounded-full transition-all duration-150",
             transactionType === "income"
               ? "bg-income text-primary-foreground shadow-sm"
               : "text-muted-foreground"
@@ -110,7 +110,7 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
 
       <div className="space-y-2">
         <Label htmlFor="edit-amount" className="text-xs text-muted-foreground font-medium">Monto</Label>
-        <Input id="edit-amount" type="text" inputMode="numeric" placeholder="0" name="amount" value={amountValue || ""} onChange={handleAmountChange} className="h-12 text-lg rounded-2xl border-border/50 px-4" />
+        <Input id="edit-amount" type="text" inputMode="numeric" placeholder="0" name="amount" value={amountValue || ""} onChange={handleAmountChange} className="h-12 text-lg rounded-full border-border/50 px-4" />
         {errors.amount && <p className="text-xs text-expense">{errors.amount.message}</p>}
       </div>
 
@@ -121,7 +121,7 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
             onValueChange={(v) => setValue("category", v)}
             defaultValue={transaction.category || ""}
           >
-            <SelectTrigger className="h-12 rounded-2xl border-border/50 text-base px-4 focus:ring-0">
+            <SelectTrigger className="h-12 rounded-full border-border/50 text-base px-4 focus:ring-0">
               <SelectValue placeholder="Seleccionar categoría" />
             </SelectTrigger>
             <SelectContent>
@@ -136,19 +136,19 @@ export function EditTransactionForm({ transaction, onSuccess }: EditTransactionF
 
       <div className="space-y-2">
         <Label htmlFor="edit-description" className="text-xs text-muted-foreground font-medium">Descripción (opcional)</Label>
-        <Input id="edit-description" placeholder="Agregar nota..." className="h-12 rounded-2xl border-border/50 px-4" {...register("description")} />
+        <Input id="edit-description" placeholder="Agregar nota..." className="h-12 rounded-full border-border/50 px-4" {...register("description")} />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="edit-date" className="text-xs text-muted-foreground font-medium">Fecha</Label>
-        <Input id="edit-date" type="date" className="h-12 rounded-2xl border-border/50 px-4" {...register("transaction_date")} />
+        <Input id="edit-date" type="date" className="h-12 rounded-full border-border/50 px-4" {...register("transaction_date")} />
       </div>
 
       <button
         type="submit"
         disabled={loading}
         className={cn(
-          "w-full h-12 rounded-2xl text-base font-semibold transition-all duration-150 active:scale-[0.97]",
+          "w-full h-12 rounded-full text-base font-semibold transition-all duration-150 active:scale-[0.97]",
           transactionType === "expense"
             ? "bg-expense text-primary-foreground hover:opacity-90"
             : "bg-income text-primary-foreground hover:opacity-90"

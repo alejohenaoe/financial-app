@@ -330,7 +330,7 @@ export function History() {
             <button
               type="button"
               onClick={() => setDeleteConfirmTxn(null)}
-              className="flex-1 h-11 rounded-xl text-sm font-medium bg-secondary text-foreground hover:opacity-80 transition-opacity"
+              className="flex-1 h-11 rounded-full text-sm font-medium bg-secondary text-foreground hover:opacity-80 transition-opacity"
             >
               Cancelar
             </button>
@@ -340,7 +340,7 @@ export function History() {
                 if (deleteConfirmTxn) handleDelete(deleteConfirmTxn.id)
                 setDeleteConfirmTxn(null)
               }}
-              className="flex-1 h-11 rounded-xl text-sm font-medium bg-expense text-primary-foreground hover:opacity-90 transition-opacity"
+              className="flex-1 h-11 rounded-full text-sm font-medium bg-expense text-primary-foreground hover:opacity-90 transition-opacity"
             >
               Eliminar
             </button>
